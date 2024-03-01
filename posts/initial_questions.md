@@ -1,7 +1,7 @@
 ---
 title: Initial Questions
 published_at: 2024-02-29
-snippet: Answering some questions from Darrin Verhagen.
+snippet: Answering some initial questions from one of my supervisers, Darrin Verhagen.
 disable_html_sanitization: true
 ---
 

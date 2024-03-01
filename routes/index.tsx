@@ -21,7 +21,7 @@ export default function BlogIndexPage(props: PageProps<Post[]>) {
       </head>
       <main class="max-w-screen-md px-4 pt-16 mx-auto">
         <h1 class="text-5xl font-bold">Distributing Synthesis</h1>
-        <h2 class="mt-4 text-2xl text-gray-500">Across Audience Devices</h2>
+        <h2 class="mt-4 text-2xl text-gray-500">by Thomas Capogreco</h2>
         <div class="mt-8">
           {posts.map((post) => <PostCard post={post} />)}
         </div>
