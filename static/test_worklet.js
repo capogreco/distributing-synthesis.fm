@@ -12,19 +12,19 @@ class TestSineProcessor extends AudioWorkletProcessor {
 
    static get parameterDescriptors () {
       return [
-          { name: 'time',          defaultValue: 0     },
-          { name: 'freq',          defaultValue: 175   },
-          { name: 'amp',           defaultValue: 1     },
+          { name: 'time', defaultValue: 0   },
+          { name: 'freq', defaultValue: 220 },
+          { name: 'amp',  defaultValue: 1   },
       ]
   }
 
    process (_inputs, outputs, parameters) {
       const out = outputs[0][0]
       for (let frame = 0; frame < out.length; frame++) {
+         const time = deparameterise.call (parameters.time, frame)
          const freq = deparameterise.call (parameters.freq, frame)
          const amp  = deparameterise.call (parameters.amp,  frame)
-         const time = deparameterise.call (parameters.time, frame)
-         out[frame] = Math.sin (2 * Math.PI * freq * time) * amp
+         out[frame] = Math.sin (time * freq * Math.PI * 2) * amp
       }
 
       return this.alive
