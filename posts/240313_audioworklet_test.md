@@ -28,12 +28,13 @@ disable_html_sanitization: true
    async function init_audio () {
       await audio_context.resume ()
       await audio_context.audioWorklet.addModule (`/test_worklet.js`)
-      graph.sine = new AudioWorkletNode (audio_context, `test_sine`)
+      graph.sine = new AudioWorkletNode (audio_context, `test_sine`, {
+         processorOptions: {
+            sample_rate: audio_context.sampleRate
+         }
+      })
       const week = 7 * 24 * 60 * 60
-      const time = graph.sine.parameters.get (`time`)
       const now = audio_context.currentTime
-      time.setValueAtTime (0, now)
-      time.linearRampToValueAtTime (week, now + week)
       graph.amp = new GainNode (audio_context, { gain: 0 })
       graph.sine.connect (graph.amp).connect (audio_context.destination)
       graph.amp.gain.setValueAtTime (graph.amp.gain.value, now)
