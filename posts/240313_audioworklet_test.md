@@ -30,12 +30,15 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
    ui_div.style.fontWeight      = 'bold'
    ui_div.style.fontStyle       = 'italic'
    ui_div.style.color           = 'white'
+   ui_div.style.userSelect      = 'none'
    ui_div.innerText = `CLICK TO INITIALISE AUDIO`
 
    const audio_context = new AudioContext ()
    audio_context.suspend ()
 
    const graph = {}
+   let pointer_down = false
+   let cool_down = false
 
    async function init_audio () {
       await audio_context.resume ()
@@ -58,14 +61,18 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
          offsetLeft, offsetTop, offsetWidth, offsetHeight 
       } } = e
 
-      const x = (e.clientX - offsetLeft) / offsetWidth
-      const y = (e.clientY - offsetTop)  / offsetHeight
+      const abs = {
+         x: e.clientX ? e.clientX : e.touches[0].clientX,
+         y: e.clientY ? e.clientY : e.touches[0].clientY
+      }
+
+      const x = (abs.x - offsetLeft) / offsetWidth
+      const y = (abs.y - offsetTop)  / offsetHeight
 
       return { x, y }
    }
 
    ui_div.onpointerdown = async e => {
-
       if (audio_context.state != `running`) {
          await init_audio ()
       }
@@ -79,15 +86,31 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
 
       const f = 220 * (2 ** point_phase (e).x)
 
-      // console.log (f)
-      console.log (graph.freq.value)
       graph.freq.cancelScheduledValues (now)
       graph.freq.setValueAtTime (graph.freq.value, now)
       graph.freq.exponentialRampToValueAtTime (f, now + 0.3)
 
+      pointer_down = true
    }
 
-   ui_div.onpointerup = async e => {
+   ui_div.onpointermove = e => {
+
+      if (!pointer_down || cool_down) return
+
+      const now = audio_context.currentTime
+      const f = 220 * (2 ** point_phase (e).x)
+
+      graph.freq.cancelScheduledValues (now)
+      graph.freq.setValueAtTime (graph.freq.value, now)
+      graph.freq.exponentialRampToValueAtTime (f, now + 0.1)
+
+      cool_down = true
+      setTimeout (() => {
+         cool_down = false
+      }, 100)
+   }
+
+   ui_div.onpointerup = e => {
 
       if (!graph.amp) {
          console.log (`delaying`)
@@ -106,6 +129,7 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
 
       ui_div.style.backgroundColor = `tomato`
 
+      pointer_down = false
    }
 
 </script>
