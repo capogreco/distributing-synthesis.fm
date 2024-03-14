@@ -22,7 +22,7 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
 
    const ui_div  = document.getElementById ("ui")
    ui_div.width  = ui_div.parentNode.scrollWidth
-   ui_div.style.height = `${ ui_div.width * 9 / 16 }px`
+   ui_div.style.height = `${ ui_div.width * 9 / 32 }px`
    ui_div.style.backgroundColor = `tomato`
    ui_div.style.textAlign       = 'center'
    ui_div.style.lineHeight      = ui_div.style.height
@@ -40,21 +40,17 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
    async function init_audio () {
       await audio_context.resume ()
       await audio_context.audioWorklet.addModule (`/test_worklet.js`)
-      graph.sine = new AudioWorkletNode (audio_context, `test_sine`, {
+      graph.sine = await new AudioWorkletNode (audio_context, `test_sine`, {
          processorOptions: {
             sample_rate: audio_context.sampleRate
          }
       })
-      const week = 7 * 24 * 60 * 60
-      const now = audio_context.currentTime
-      graph.amp = new GainNode (audio_context, { gain: 0 })
-      graph.sine.connect (graph.amp).connect (audio_context.destination)
-      graph.freq = graph.sine.parameters.get (`freq`)
-      graph.amp.gain.setValueAtTime (graph.amp.gain.value, now)
-      graph.amp.gain.linearRampToValueAtTime (0.2, now + 0.1)
+      graph.sine.connect (audio_context.destination)
+      graph.freq = await graph.sine.parameters.get (`freq`)
+      graph.amp  = await graph.sine.parameters.get (`amp`)
 
       ui_div.style.backgroundColor = `limegreen`
-      ui_div.innerText = `AUDIO IS ${ audio_context.state.toUpperCase () }`
+      ui_div.innerText = `AUDIO CONTEXT IS ${ audio_context.state.toUpperCase () }`
    }
 
    function point_phase (e) {
@@ -78,12 +74,14 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
 
       const now = audio_context.currentTime
 
-      graph.amp.gain.setValueAtTime (graph.amp.gain.value, now)
-      graph.amp.gain.linearRampToValueAtTime (0.2, now + 0.1)
+      graph.amp.setValueAtTime (graph.amp.value, now)
+      graph.amp.linearRampToValueAtTime (0.2, now + 0.1)
 
       const f = 220 * (2 ** point_phase (e).x)
 
       // console.log (f)
+      console.log (graph.freq.value)
+      graph.freq.cancelScheduledValues (now)
       graph.freq.setValueAtTime (graph.freq.value, now)
       graph.freq.exponentialRampToValueAtTime (f, now + 0.3)
 
@@ -91,11 +89,20 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
 
    ui_div.onpointerup = async e => {
 
-      await graph.amp
+      if (!graph.amp) {
+         console.log (`delaying`)
+         setTimeout (ui_div.onpointerup, 100, e)
+         return
+      }
 
       const now = audio_context.currentTime
-      graph.amp.gain.setValueAtTime (graph.amp.gain.value, now)
-      graph.amp.gain.linearRampToValueAtTime (0, now + 0.1)
+
+      graph.amp.setValueAtTime (graph.amp.value, now)
+      graph.amp.linearRampToValueAtTime (0, now + 0.3)
+
+      graph.freq.cancelScheduledValues (now)
+      graph.freq.setValueAtTime (graph.freq.value, now)
+      graph.freq.exponentialRampToValueAtTime (16, now + 0.3)
 
       ui_div.style.backgroundColor = `tomato`
 
