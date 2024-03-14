@@ -33,6 +33,3 @@ function deparameterise (index) {
    return this[(1 !== this.length) * index]
 }
 
-function rand_freq () {
-   return 
-}

@@ -18,6 +18,14 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
 
 <div id="ui"></div>
 
+*^ click and drag*
+
+[Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) uses an audio graph paradigm not dissimilar to that used in modular synthesis, wherein nodes, like modules, each with their own inputs and outputs, are routed together to yield a specific audio output at the speakers given particular control inputs at the user interface.  Audio Worklet is an extension of this paradigm, in that it allows you to create custom nodes that can be routed to other nodes in a Web Audio API audio graph.
+
+
+
+
+
 <script type="module">
 
    const ui_div  = document.getElementById ("ui")
