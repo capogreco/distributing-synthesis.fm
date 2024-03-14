@@ -8,7 +8,7 @@ class TestSineProcessor extends AudioWorkletProcessor {
 
    static get parameterDescriptors () {
       return [
-         { name: 'freq', defaultValue: 220 },
+         { name: 'freq', defaultValue: rand_freq () },
          { name: 'amp',  defaultValue: 1   },
       ]
   }
@@ -30,4 +30,8 @@ registerProcessor ('test_sine', TestSineProcessor)
 
 function deparameterise (index) {
    return this[(1 !== this.length) * index]
+}
+
+function rand_freq () {
+   return 440 * 4 ** Math.random ()
 }
