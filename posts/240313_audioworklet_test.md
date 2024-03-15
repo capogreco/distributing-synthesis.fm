@@ -7,9 +7,9 @@ disable_html_sanitization: true
 
 For much of the 2010s, doing more sophisticated forms of synthesis than simple subtractive and rudimentary FM in the browser required [Script Processor Node](https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode), which never really seemed to reach full maturity across the board, and in any case, became obsolete with the introduction of [Audio Worklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet) in 2017.  
 
-Currently, Audio Worklet is [almost globally implemented](https://caniuse.com/mdn-api_audioworklet), and currently stands as the best method for browser implementions of phase modulation, or other more esoteric forms of synthesis requiring access to individual samples.
+Currently, **Audio Worklet** is [almost globally implemented](https://caniuse.com/mdn-api_audioworklet), and currently stands as the best method for browser implementions of phase modulation, or any other more esoteric form of synthesis requiring access to individual samples.
 
-There are a handful of resources about Audio Worklet, including:
+There are a handful of resources about **Audio Worklet**, including:
 - the World Wide Web Consortium (W3C) [specification](https://webaudio.github.io/web-audio-api/#AudioWorklet)
 - Hongchan Choi's original 2017 blog post, [Enter Audio Worklet](https://developer.chrome.com/blog/audio-worklet)
 - Google Chrome Lab's [resource page](https://googlechromelabs.github.io/web-audio-samples/audio-worklet/)
@@ -20,26 +20,39 @@ This post will detail how to implement a simple sine wave synthesiser using Audi
 
 *^ click and drag*
 
-[Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) uses an audio graph paradigm not dissimilar to that used in modular synthesis, wherein nodes, like modules, each with their own inputs and outputs, are routed together to yield a specific audio output at the speakers given particular control inputs at the user interface.  Audio Worklet is an extension of this paradigm, in that it allows you to create custom nodes that can be routed to other nodes in a Web Audio API audio graph.
+The [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) uses an audio graph paradigm (not dissimilar to that used in modular synthesis) wherein nodes (like modules) each with their own inputs and outputs, are routed together to create a synthesis system that yields some specified audio output at the speakers given some specified control input at the user interface (or generative algorithm).  
 
+**Audio Worklet** is an extension of this paradigm, in that it allows you to create custom nodes that can be routed to other nodes in such a Web Audio API audio graph.
 
+### Audio Context
 
+```js
+const ctx = new AudioContext ()
+```
 
+The Web Audio API revolves around a central object, it's [AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) (see also: [BaseAudioContext](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext)), which is responsible for: 
+- exposing the device's hardware output bus: [`ctx.destination`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/destination)
+- providing a clock for scheduling events: [`ctx.currentTime`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/currentTime)
+- providing us with the sample rate, as: [`ctx.sampleRate`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/sampleRate)
+- holding its current status, at: [`ctx.state`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/state)
+
+So as to make for a more comfortable browsing experience, upon loading in a newly opened webpage, an Audio Context is restricted from making sound before some form of user gesture.
 
 <script type="module">
-
    const ui_div  = document.getElementById ("ui")
    ui_div.width  = ui_div.parentNode.scrollWidth
    ui_div.style.height = `${ ui_div.width * 9 / 32 }px`
    ui_div.style.backgroundColor = `tomato`
    ui_div.style.textAlign       = 'center'
    ui_div.style.lineHeight      = ui_div.style.height
-   ui_div.style.fontSize        = '36px'
+   ui_div.style.fontSize        = `${ ui_div.width / 20 }px`
    ui_div.style.fontWeight      = 'bold'
    ui_div.style.fontStyle       = 'italic'
    ui_div.style.color           = 'white'
    ui_div.style.userSelect      = 'none'
    ui_div.innerText = `CLICK TO INITIALISE AUDIO`
+
+   console.log (ui_div.width)
 
    const audio_context = new AudioContext ()
    audio_context.suspend ()
