@@ -14,29 +14,78 @@ There are a handful of resources about **Audio Worklet**, including:
 - Hongchan Choi's original 2017 blog post, [Enter Audio Worklet](https://developer.chrome.com/blog/audio-worklet)
 - Google Chrome Lab's [resource page](https://googlechromelabs.github.io/web-audio-samples/audio-worklet/)
 
-This post will detail how to implement a simple sine wave synthesiser using Audio Worklet Node.
+This post will detail how to implement this simple sine wave synthesiser using **Audio Worklet**:
 
 <div id="ui"></div>
 
-*^ click and drag*
+*^ click and drag for control*
 
-The [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) uses an audio graph paradigm (not dissimilar to that used in modular synthesis) wherein nodes (like modules) each with their own inputs and outputs, are routed together to create a synthesis system that yields some specified audio output at the speakers given some specified control input at the user interface (or generative algorithm).  
+## Web Audio API
 
-**Audio Worklet** is an extension of this paradigm, in that it allows you to create custom nodes that can be routed to other nodes in such a Web Audio API audio graph.
+The [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) uses an audio graph paradigm (not dissimilar to that used in modular synthesis) wherein nodes (like modules) each with their own inputs and outputs, are routed together to create a synthesis system that yields some specified audio output at the speakers given some specified control input at the user interface (or generative algorithm).
 
-### Audio Context
+**Audio Worklet** extends this paradigm by providing a way to instantiate custom nodes, which can then be routed with other nodes in the Web Audio API audio graph.
+
+## Audio Context
 
 ```js
-const ctx = new AudioContext ()
+const audio_context = new AudioContext ()
 ```
 
-The Web Audio API revolves around a central object, it's [AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) (see also: [BaseAudioContext](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext)), which is responsible for: 
-- exposing the device's hardware output bus: [`ctx.destination`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/destination)
-- providing a clock for scheduling events: [`ctx.currentTime`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/currentTime)
-- providing us with the sample rate, as: [`ctx.sampleRate`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/sampleRate)
-- holding its current status, at: [`ctx.state`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/state)
+The Web Audio API revolves around a central object, the [AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) (see also: [BaseAudioContext](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext)), which is responsible for: 
+- exposing the device's hardware output bus: [`audio_context.destination`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/destination)
+- providing a clock for scheduling events: [`audio_context.currentTime`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/currentTime)
+- providing us with the sample rate, as: [`audio_context.sampleRate`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/sampleRate)
+- holding its current status, at: [`audio_context.state`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/state)
 
-So as to make for a more comfortable browsing experience, upon loading in a newly opened webpage, an Audio Context is restricted from making sound before some form of user gesture.
+So as to make for a more comfortable browsing experience, upon loading in a newly opened webpage, an Audio Context is restricted from making sound in any browser before some form of user gesture.
+
+For this reason, it is good practice to either wait for a user gesture to instantiate a new Audio Context, or to suspend it explicitly immediately after instatiation:
+
+```js
+const audio_context = new AudioContext ()
+audio_context.suspend ()
+```
+... and then, resume it on some sort of user gesture, for example:
+
+```js
+document.body.onpointerdown = () => audio_context.resume ()
+```
+
+## Instantiating Nodes
+
+Nodes can be instantiated in [two ways](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#creating_an_audionode), via an Audio Context instance method:
+
+```js
+const osc = audio_context.createOscillator ()
+const amp = audio_context.createGain ()
+```
+
+... or via their class constructor, for example:
+
+```js
+const osc = new OscillatorNode (audio_context)
+const amp = new GainNode (audio_context)
+```
+
+## AudioParam
+
+Some attributes can be set directly, for example:
+
+```js 
+osc.type = `sawtooth`
+```
+
+However, many parameters require the ability to be modulated over time, either by the user (or generative algorithm), or by other nodes.  These modulable attributes present themselves as instances of [`AudioParam`](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam).
+
+In practice, browser implementation of user interface control of AudioParams are a bit [janky](https://www.merriam-webster.com/dictionary/janky), and so some extra care is required to avoid discontinuities in parameter values and scheduling.
+
+
+
+For most use cases, it makes sense to have `audio_context.resume ()` inside some sort of audio initialisation function, which can also be responsible for building a persistant node graph.
+
+
+
 
 <script type="module">
    const ui_div  = document.getElementById ("ui")
@@ -51,8 +100,6 @@ So as to make for a more comfortable browsing experience, upon loading in a newl
    ui_div.style.color           = 'white'
    ui_div.style.userSelect      = 'none'
    ui_div.innerText = `CLICK TO INITIALISE AUDIO`
-
-   console.log (ui_div.width)
 
    const audio_context = new AudioContext ()
    audio_context.suspend ()
