@@ -16,7 +16,7 @@ There are a handful of resources about **Audio Worklet**, including:
 
 This post will detail how to implement this simple sine wave synthesiser using **Audio Worklet**:
 
-<div id="ui"></div>
+<div id="worklet_example"></div>
 
 *^ click and drag for control*
 
@@ -52,6 +52,8 @@ audio_context.suspend ()
 document.body.onpointerdown = () => audio_context.resume ()
 ```
 
+For most use cases, it makes sense to have `audio_context.resume ()` inside some sort of audio initialisation function, which can also be responsible for building a persistant node graph.
+
 ## Instantiating Nodes
 
 Nodes can be instantiated in [two ways](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#creating_an_audionode), via an Audio Context instance method:
@@ -76,30 +78,144 @@ Some attributes can be set directly, for example:
 osc.type = `sawtooth`
 ```
 
-However, many parameters require the ability to be modulated over time, either by the user (or generative algorithm), or by other nodes.  These modulable attributes present themselves as instances of [`AudioParam`](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam).
+However, since many parameters require the ability to be modulated smoothly over time, these modulable parameters exist as object instances of [`AudioParam`](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam), and live their life as attribute appendages of their host node.  For example: 
 
-In practice, browser implementation of user interface control of AudioParams are a bit [janky](https://www.merriam-webster.com/dictionary/janky), and so some extra care is required to avoid discontinuities in parameter values and scheduling.
+```js
+osc.frequency
+```
+
+... or:
+
+```js
+amp.gain
+```
+
+While it is technically possible to set the value of an AudioParam via its `.value` attribute, like this: 
+```js
+osc.frequency.value = 220
+```
+
+... this method runs into problems because it uses javascripts inbuilt scheduling paradigm, rather than Web Audio API's purpose built scheduling paradigm, and as such can give glitchy, unexpected results when overused.  I have found that this method is not so good for anything other than initialising values at instantiation.
+
+There are a handful of instance methods which are better suited to handle situations where you may want to change the value of an AudioParam:
+
+```js
+const now = audio_context.currentTime
+osc.frequencey.setValueAtTime (220, now)
+osc.frequency.exponentialRampToValueAtTime (440, now + 1)
+
+```
 
 
+In practice, browser implementation of real-time scheduling of AudioParams are a bit [janky](https://www.merriam-webster.com/dictionary/janky), and so some extra care is required to avoid discontinuities in parameter values and scheduling.  To avoid glitches, I've found it to be expedient to not only cancel an AudioParam's scheduled values, but to also set its value explicitly to be what it already is, before scheduling new values, like this:
 
-For most use cases, it makes sense to have `audio_context.resume ()` inside some sort of audio initialisation function, which can also be responsible for building a persistant node graph.
+```js
+const now = audio_context.currentTime
 
+osc.frequency.cancelScheduledValues (now)
+osc.frequency.setValueAtTime (osc.frequency.value, now)
+osc.frequency.exponentialRampToValueAtTime (440, now + 1)
 
+amp.gain.cancelScheduledValues (now)
+amp.gain.setValueAtTime (amp.gain.value, now)
+amp.gain.linearRampToValueAtTime (0.8, now + 1)
+```
 
+It is worth noting that in Web Audio API, the units for time is *seconds*, rather than milliseconds.
+
+It is also worth noting that the `.exponentialRampToValueAtTime` method can not deal with zero values, so for GainNodes such as we have assigned to `amp` above, where we want the value to go to zero, we need to use `.linearRampToValueAtTime`.  I may make another post about how to get exponential gain envelopes 
+
+As it is likely we will use this pattern several places in our code, I recommend abstracting it into some convenience functions:
+
+```js
+function prepare_param (p, now) {
+   p.cancelScheduledValues (now)
+   p.setValueAtTime (p.value, now)
+}
+
+// accepts an array of AudioParams
+function prepare_params (a, now) {
+   a.forEach (p => prepare_param (p, now))
+}
+```
+
+... which lets us dry up our code somewhat:
+
+```js
+const now = audio_context.currentTime
+prepare_params ([ osc.frequency, amp.gain ], now)
+osc.frequency.exponentialRampToValueAtTime (440, now + 1)
+amp.gain.linearRampToValueAtTime (0.8, now + 1)
+```
+
+## AudioWorkletProcessor
+
+The digital signal processing is done in an seperate `.js` file containing a class definition that inherits from [AudioWorkletProcessor](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor).  
+
+The basic shape of that file is as follows:
+
+```js
+// worklet.js
+
+class ExampleProcessor extends AudioWorkletProcessor {
+
+   constructor () {
+      super ()
+   }
+
+   static get parameterDescriptors () {
+      return [ 
+         { name: 'example_param', defaultValue: 0 },
+      ]
+   }
+
+   process (_inputs, outputs, parameters) {
+      const out = outputs[0][0]
+      for (let frame = 0; frame < out.length; frame++) {
+         out[frame] = // DSP goes here
+      }
+
+      return this.alive
+   }
+}
+
+registerProcessor ('example_worklet', ExampleProcessor)
+
+```
+
+Note the `registerProcessor ()` which registers the processor under the name given to it as its first argument.
+
+We can then add that file as an audioWorklet module like this:
+
+```js
+await audio_context.audioWorklet.addModule (`worklet.js`)
+```
+
+... and then instantiate a node by using the name we registered it with:
+
+```js
+const worklet_node = await new AudioWorkletNode (audio_context, `example_worklet`)
+```
+
+## Setting the Sample Rate
+
+## Deparameterisation
+
+## Example Sine Synth
 
 <script type="module">
-   const ui_div  = document.getElementById ("ui")
-   ui_div.width  = ui_div.parentNode.scrollWidth
-   ui_div.style.height = `${ ui_div.width * 9 / 32 }px`
-   ui_div.style.backgroundColor = `tomato`
-   ui_div.style.textAlign       = 'center'
-   ui_div.style.lineHeight      = ui_div.style.height
-   ui_div.style.fontSize        = `${ ui_div.width / 20 }px`
-   ui_div.style.fontWeight      = 'bold'
-   ui_div.style.fontStyle       = 'italic'
-   ui_div.style.color           = 'white'
-   ui_div.style.userSelect      = 'none'
-   ui_div.innerText = `CLICK TO INITIALISE AUDIO`
+   const div  = document.getElementById ("worklet_example")
+   div.width  = div.parentNode.scrollWidth
+   div.style.height = `${ div.width * 9 / 32 }px`
+   div.style.backgroundColor = `tomato`
+   div.style.textAlign       = 'center'
+   div.style.lineHeight      = div.style.height
+   div.style.fontSize        = `${ div.width / 20 }px`
+   div.style.fontWeight      = 'bold'
+   div.style.fontStyle       = 'italic'
+   div.style.color           = 'white'
+   div.style.userSelect      = 'none'
+   div.innerText = `CLICK TO INITIALISE AUDIO`
 
    const audio_context = new AudioContext ()
    audio_context.suspend ()
@@ -110,8 +226,8 @@ For most use cases, it makes sense to have `audio_context.resume ()` inside some
 
    async function init_audio () {
       await audio_context.resume ()
-      await audio_context.audioWorklet.addModule (`/test_worklet.js`)
-      graph.sine = await new AudioWorkletNode (audio_context, `test_sine`, {
+      await audio_context.audioWorklet.addModule (`test_worklet.js`)
+      graph.sine = await new AudioWorkletNode (audio_context, `worklet_sine`, {
          processorOptions: {
             sample_rate: audio_context.sampleRate
          }
@@ -120,8 +236,8 @@ For most use cases, it makes sense to have `audio_context.resume ()` inside some
       graph.freq = await graph.sine.parameters.get (`freq`)
       graph.amp  = await graph.sine.parameters.get (`amp`)
 
-      ui_div.style.backgroundColor = `limegreen`
-      ui_div.innerText = `AUDIO CONTEXT IS ${ audio_context.state.toUpperCase () }`
+      div.style.backgroundColor = `limegreen`
+      div.innerText = `AUDIO CONTEXT IS ${ audio_context.state.toUpperCase () }`
    }
 
    function point_phase (e) {
@@ -140,36 +256,41 @@ For most use cases, it makes sense to have `audio_context.resume ()` inside some
       return { x, y }
    }
 
-   ui_div.onpointerdown = async e => {
+   function prepare_param (p, now) {
+      p.cancelScheduledValues (now)
+      p.setValueAtTime (p.value, now)
+   }
+
+   function prepare_params (a, now) {
+      a.forEach (p => prepare_param (p, now))
+   }
+
+   div.onpointerdown = async e => {
       if (audio_context.state != `running`) {
          await init_audio ()
       }
 
-      ui_div.style.backgroundColor = `limegreen`
+      div.style.backgroundColor = `limegreen`
 
       const now = audio_context.currentTime
-
-      graph.amp.setValueAtTime (graph.amp.value, now)
-      graph.amp.linearRampToValueAtTime (0.2, now + 0.1)
-
+      prepare_params ([ graph.freq, graph.amp ], now)
+      
       const f = 220 * (2 ** point_phase (e).x)
-
-      graph.freq.cancelScheduledValues (now)
-      graph.freq.setValueAtTime (graph.freq.value, now)
       graph.freq.exponentialRampToValueAtTime (f, now + 0.3)
+      
+      graph.amp.linearRampToValueAtTime (0.2, now + 0.1)
 
       pointer_down = true
    }
 
-   ui_div.onpointermove = e => {
+   div.onpointermove = e => {
 
       if (!pointer_down || cool_down) return
 
       const now = audio_context.currentTime
       const f = 220 * (2 ** point_phase (e).x)
 
-      graph.freq.cancelScheduledValues (now)
-      graph.freq.setValueAtTime (graph.freq.value, now)
+      prepare_param (graph.freq, now)
       graph.freq.exponentialRampToValueAtTime (f, now + 0.1)
 
       cool_down = true
@@ -178,24 +299,20 @@ For most use cases, it makes sense to have `audio_context.resume ()` inside some
       }, 100)
    }
 
-   ui_div.onpointerup = e => {
+   div.onpointerup = e => {
 
       if (!graph.amp) {
          console.log (`delaying`)
-         setTimeout (ui_div.onpointerup, 100, e)
+         setTimeout (div.onpointerup, 100, e)
          return
       }
 
       const now = audio_context.currentTime
-
-      graph.amp.setValueAtTime (graph.amp.value, now)
+      prepare_params ([ graph.freq, graph.amp ], now)
+      graph.freq.exponentialRampToValueAtTime (16, now + 0.3)
       graph.amp.linearRampToValueAtTime (0, now + 0.3)
 
-      graph.freq.cancelScheduledValues (now)
-      graph.freq.setValueAtTime (graph.freq.value, now)
-      graph.freq.exponentialRampToValueAtTime (16, now + 0.3)
-
-      ui_div.style.backgroundColor = `tomato`
+      div.style.backgroundColor = `tomato`
 
       pointer_down = false
    }

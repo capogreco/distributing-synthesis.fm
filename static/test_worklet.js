@@ -1,4 +1,5 @@
-class TestSineProcessor extends AudioWorkletProcessor {
+class SineProcessor extends AudioWorkletProcessor {
+
    constructor ({ processorOptions: { sample_rate } }) {
       super ()
       this.alive = true
@@ -11,7 +12,7 @@ class TestSineProcessor extends AudioWorkletProcessor {
          { name: 'freq', defaultValue: 16 },
          { name: 'amp',  defaultValue: 0 },
       ]
-  }
+   }
 
    process (_inputs, outputs, parameters) {
       const out = outputs[0][0]
@@ -27,7 +28,7 @@ class TestSineProcessor extends AudioWorkletProcessor {
    }
 }
 
-registerProcessor ('test_sine', TestSineProcessor)
+registerProcessor ('worklet_sine', SineProcessor)
 
 function deparameterise (index) {
    return this[(1 !== this.length) * index]
