@@ -1,7 +1,7 @@
 ---
-title: Testing Audio Worklet
+title: Audio Worklet Basics
 published_at: 2024-02-29
-snippet: testing & documenting audioWorklet
+snippet: documenting a basic audioWorklet workflow
 disable_html_sanitization: true
 ---
 
