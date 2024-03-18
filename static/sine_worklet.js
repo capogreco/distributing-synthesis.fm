@@ -17,8 +17,10 @@ class SineProcessor extends AudioWorkletProcessor {
    process (_inputs, outputs, parameters) {
       const out = outputs[0][0]
       for (let frame = 0; frame < out.length; frame++) {
-         const freq = deparameterise.call (parameters.freq, frame)
-         const amp  = deparameterise.call (parameters.amp,  frame)
+         // const freq = deparameterise.call (parameters.freq, frame)
+         // const amp  = deparameterise.call (parameters.amp,  frame)
+         const freq = deparameterise (parameters.freq, frame)
+         const amp  = deparameterise (parameters.amp,  frame)
          out[frame] = Math.sin (this.phase * Math.PI * 2) * amp
          this.phase += this.inc * freq
          this.phase %= 1
@@ -30,7 +32,7 @@ class SineProcessor extends AudioWorkletProcessor {
 
 registerProcessor ('worklet_sine', SineProcessor)
 
-function deparameterise (index) {
-   return this[(1 !== this.length) * index]
-}
 
+function deparameterise (arr, ind) {
+   return arr[(1 !== arr.length) * ind]
+}

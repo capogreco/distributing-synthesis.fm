@@ -150,7 +150,7 @@ amp.gain.linearRampToValueAtTime (0.8, now + 1)
 
 ## AudioWorkletProcessor
 
-The digital signal processing is done in an seperate `.js` file containing a class definition that inherits from [AudioWorkletProcessor](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor).  
+The digital signal processing is done in an separate `.js` file containing a class definition that inherits from [AudioWorkletProcessor](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor).  
 
 The basic shape of that file is as follows:
 
@@ -161,6 +161,7 @@ class ExampleProcessor extends AudioWorkletProcessor {
 
    constructor () {
       super ()
+      this.alive = true
    }
 
    static get parameterDescriptors () {
@@ -194,14 +195,134 @@ await audio_context.audioWorklet.addModule (`worklet.js`)
 ... and then instantiate a node by using the name we registered it with:
 
 ```js
-const worklet_node = await new AudioWorkletNode (audio_context, `example_worklet`)
+const worklet_node = new AudioWorkletNode (audio_context, `example_worklet`)
 ```
 
 ## Setting the Sample Rate
 
+The Audio Worklet paradigm is designed so the code doing the digital signal processing (DSP) exists in a separate, isolated scope, for reasons that are explained [here](https://developer.chrome.com/blog/audio-worklet).  There are two ways to get information from the main scope to the DSP processor: 
+
+1. passing an options object to the constructor (at instantiation)
+2. via an AudioParam (for real-time control)
+
+In [the documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/AudioWorkletProcessor) we can see that AudioWorkletProcessor's constructor function accepts an options object as an argument, and that several properties are given as suggestions:
+
+- `numberOfInputs`
+- `numberOfOutputs`
+- `outputChannelCount`
+- `parameterData`
+- `processorOptions`
+
+Since we will be setting the sample-rate in the DSP processor, we can use `processorOptions`.
+
+In the main file, the options object is passed in as the *third* argument:
+
+```js
+const worklet_node = new AudioWorkletNode (audio_context, `example_worklet`, {
+   processorOptions: {
+      sample_rate: audio_context.sampleRate
+   }
+})
+```
+In the processor scope, we can accept this sample-rate value in our class's constructor function.  Here I am exposing the `sample_rate` property of the options object by [double destructuring](https://stackoverflow.com/questions/50999968/es6-double-destructure) on the way in:
+
+```js
+constructor ({ processorOptions: { sample_rate } }) {
+   super ()
+   this.alive = true
+   this.phase = 0
+   this.inc   = 1 / sample_rate
+}
+```
+It makes sense for us to store this value as a period rather than a rate, as we will be using it to increment our phase value between frames.
+
 ## Deparameterisation
 
+AudioParams may be constantly changing, in which case the array of values exposed on the `parameters` parameter in the `process ()` function of our processor will be the same length as the `out` array; or static, in which case the parameter is exposed as an array of length one.  For this reason we will need a way to deal with AudioParams in either case:
+
+```js
+function deparameterise (arr, ind) {
+   return arr[(1 != arr.length) * ind]
+}
+```
+
+Defining a `deparameterise ()` function like this ^ allows us to write the `process ()` method like this:
+
+```js
+process (_inputs, outputs, parameters) {
+
+   const out = outputs[0][0]
+
+   for (let frame = 0; frame < out.length; frame++) {
+
+      const freq = deparameterise (parameters.freq, frame)
+      const amp  = deparameterise (parameters.amp,  frame)
+
+      out[frame] = Math.sin (this.phase * Math.PI * 2) * amp
+
+      this.phase += this.inc * freq
+      this.phase %= 1
+   }
+
+   return this.alive
+}
+
+```
+
+Note that the inputs and outputs parameters are arrays to accomodate for nodes that have multiple inputs and outputs, and that each of those outputs may have multiple channels.
+
+`const out = outputs[0][0]` therefore specifies that we are writing to the first channel of the first output.
+
+It is also worth noting that the output array works via [side effect](https://en.wikipedia.org/wiki/Side_effect_(computer_science)), and that what is returned is simply a boolean `true`, to indicate that the synth is still running and is not ready for garbage collection.
+
 ## Example Sine Synth
+
+### Processor:
+
+```js
+// sine_worklet.js
+class SineProcessor extends AudioWorkletProcessor {
+
+   constructor ({ processorOptions: { sample_rate } }) {
+      super ()
+      this.alive = true
+      this.phase = Math.random ()
+      this.inc   = 1 / sample_rate
+   }
+
+   static get parameterDescriptors () {
+      return [ 
+         { name: 'freq', defaultValue: 16 },
+         { name: 'amp',  defaultValue: 0 },
+      ]
+   }
+
+   process (_inputs, outputs, parameters) {
+      const out = outputs[0][0]
+      for (let frame = 0; frame < out.length; frame++) {
+         const freq = deparameterise (parameters.freq, frame)
+         const amp  = deparameterise (parameters.amp,  frame)
+         out[frame] = Math.sin (this.phase * Math.PI * 2) * amp
+         this.phase += this.inc * freq
+         this.phase %= 1
+      }
+
+      return this.alive
+   }
+}
+
+registerProcessor ('worklet_sine', SineProcessor)
+
+function deparameterise (arr, ind) {
+   return arr[(1 != arr.length) * ind]
+}
+
+```
+
+### Interface:
+
+```html
+<div id="worklet_example"></div>
 
 <script type="module">
    const div  = document.getElementById ("worklet_example")
@@ -226,13 +347,15 @@ const worklet_node = await new AudioWorkletNode (audio_context, `example_worklet
 
    async function init_audio () {
       await audio_context.resume ()
-      await audio_context.audioWorklet.addModule (`test_worklet.js`)
-      graph.sine = await new AudioWorkletNode (audio_context, `worklet_sine`, {
+      await audio_context.audioWorklet.addModule (`sine_worklet.js`)
+
+      graph.sine = new AudioWorkletNode (audio_context, `worklet_sine`, {
          processorOptions: {
             sample_rate: audio_context.sampleRate
          }
       })
       graph.sine.connect (audio_context.destination)
+
       graph.freq = await graph.sine.parameters.get (`freq`)
       graph.amp  = await graph.sine.parameters.get (`amp`)
 
@@ -316,7 +439,125 @@ const worklet_node = await new AudioWorkletNode (audio_context, `example_worklet
 
       pointer_down = false
    }
+</script>
+```
 
+
+<script type="module">
+   const div  = document.getElementById ("worklet_example")
+   div.width  = div.parentNode.scrollWidth
+   div.style.height = `${ div.width * 9 / 32 }px`
+   div.style.backgroundColor = `tomato`
+   div.style.textAlign       = 'center'
+   div.style.lineHeight      = div.style.height
+   div.style.fontSize        = `${ div.width / 20 }px`
+   div.style.fontWeight      = 'bold'
+   div.style.fontStyle       = 'italic'
+   div.style.color           = 'white'
+   div.style.userSelect      = 'none'
+   div.innerText = `CLICK TO INITIALISE AUDIO`
+
+   const audio_context = new AudioContext ()
+   audio_context.suspend ()
+
+   const graph = {}
+   let pointer_down = false
+   let cool_down = false
+
+   async function init_audio () {
+      await audio_context.resume ()
+      await audio_context.audioWorklet.addModule (`sine_worklet.js`)
+
+      graph.sine = new AudioWorkletNode (audio_context, `worklet_sine`, {
+         processorOptions: {
+            sample_rate: audio_context.sampleRate
+         }
+      })
+      graph.sine.connect (audio_context.destination)
+
+      graph.freq = await graph.sine.parameters.get (`freq`)
+      graph.amp  = await graph.sine.parameters.get (`amp`)
+
+      div.style.backgroundColor = `limegreen`
+      div.innerText = `AUDIO CONTEXT IS ${ audio_context.state.toUpperCase () }`
+   }
+
+   function point_phase (e) {
+      const { target: { 
+         offsetLeft, offsetTop, offsetWidth, offsetHeight 
+      } } = e
+
+      const abs = {
+         x: e.clientX ? e.clientX : e.touches[0].clientX,
+         y: e.clientY ? e.clientY : e.touches[0].clientY
+      }
+
+      const x = (abs.x - offsetLeft) / offsetWidth
+      const y = (abs.y - offsetTop)  / offsetHeight
+
+      return { x, y }
+   }
+
+   function prepare_param (p, now) {
+      p.cancelScheduledValues (now)
+      p.setValueAtTime (p.value, now)
+   }
+
+   function prepare_params (a, now) {
+      a.forEach (p => prepare_param (p, now))
+   }
+
+   div.onpointerdown = async e => {
+      if (audio_context.state != `running`) {
+         await init_audio ()
+      }
+
+      div.style.backgroundColor = `limegreen`
+
+      const now = audio_context.currentTime
+      prepare_params ([ graph.freq, graph.amp ], now)
+      
+      const f = 220 * (2 ** point_phase (e).x)
+      graph.freq.exponentialRampToValueAtTime (f, now + 0.3)
+      
+      graph.amp.linearRampToValueAtTime (0.2, now + 0.1)
+
+      pointer_down = true
+   }
+
+   div.onpointermove = e => {
+
+      if (!pointer_down || cool_down) return
+
+      const now = audio_context.currentTime
+      const f = 220 * (2 ** point_phase (e).x)
+
+      prepare_param (graph.freq, now)
+      graph.freq.exponentialRampToValueAtTime (f, now + 0.1)
+
+      cool_down = true
+      setTimeout (() => {
+         cool_down = false
+      }, 100)
+   }
+
+   div.onpointerup = e => {
+
+      if (!graph.amp) {
+         console.log (`delaying`)
+         setTimeout (div.onpointerup, 100, e)
+         return
+      }
+
+      const now = audio_context.currentTime
+      prepare_params ([ graph.freq, graph.amp ], now)
+      graph.freq.exponentialRampToValueAtTime (16, now + 0.3)
+      graph.amp.linearRampToValueAtTime (0, now + 0.3)
+
+      div.style.backgroundColor = `tomato`
+
+      pointer_down = false
+   }
 </script>
 
 <br>
