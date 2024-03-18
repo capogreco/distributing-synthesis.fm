@@ -16,45 +16,65 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
    const width = cnv.parentNode.scrollWidth
 
    cnv.width  = width
-   cnv.height = width
+   cnv.height = width * 9 / 16
 
    const ctx = cnv.getContext ('2d')
    ctx.fillStyle = "hotpink";
 
    const radius = width / 4
    const mid = {
-      x: width / 2,
-      y: width / 2, 
+      x: cnv.width / 2,
+      y: cnv.height / 2, 
    }
 
    let pointer_down = false
+   let cool_down = false
+   let frame_count = 0
 
    const mouse_pos = { x : 0, y : 0 }
 
-   const circle_points = []
-   const total_points = 5
+   const total_points = 12
 
    function draw () {
+      const circle_points = []
       ctx.fillStyle = `turquoise`
-      ctx.fillRect (0, 0, width, width)
+      ctx.fillRect (0, 0, cnv.width, cnv.height)
+
+      const phase_off = frame_count * -1 / (2 ** 12)
+
       if (pointer_down) {
          for (let i = 0; i < total_points; i++) {
+
             const phase = i / total_points
-            const x = mid.x + (Math.sin (phase * Math.PI * 2) * radius)
-            const y = mid.y + (Math.cos (phase * Math.PI * 2) * radius)
+            const angle = (phase + phase_off) * Math.PI * 2
+
+            const x = mid.x + (Math.sin (angle) * radius)
+            const y = mid.y + (Math.cos (angle) * radius)
+
             circle_points.push ({ x, y })
          }
 
-         ctx.beginPath()
-         ctx.moveTo (circle_points[0].x, circle_points[0].y)
+         // ctx.moveTo (circle_points[0].x, circle_points[0].y)
          circle_points.forEach ((p, i) => {
-            const ind = (i + 1) % circle_points.length
-            ctx.quadraticCurveTo (mouse_pos.x, mouse_pos.y, circle_points[ind].x, circle_points[ind].y);
+            // const ind = (i + 1) % circle_points.length
+            ctx.beginPath()
+            ctx.moveTo (mouse_pos.x, mouse_pos.y)
+            ctx.lineTo (p.x, p.y)
+            ctx.strokeStyle = `hotpink`
+            ctx.lineWidth = 6
+
+            ctx.stroke ()
+            // ctx.quadraticCurveTo (mouse_pos.x, mouse_pos.y, circle_points[ind].x, circle_points[ind].y);
          })
-         ctx.fillStyle = "hotpink";
-         ctx.fill ()
+         // ctx.closePath ()
+
+         // ctx.fillStyle = "hotpink";
+         // ctx.fill ()
+
 
       }
+
+      frame_count++
 
       requestAnimationFrame (draw)
    }
@@ -71,12 +91,11 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
          y: e.clientY ? e.clientY : e.touches[0].clientY
       }
 
-      // const x = (abs.x - offsetLeft) / offsetWidth
-      // const y = (abs.y - offsetTop)  / offsetHeight
+      const x = abs.x - offsetLeft
+      const y = abs.y - offsetTop
 
-      // return { x, y }
-
-      return abs
+      return { x, y }
+      // return abs
    }
 
 
@@ -128,6 +147,7 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
       // prepare_params ([ graph.freq, graph.amp ], now)
       // graph.freq.exponentialRampToValueAtTime (16, now + 0.3)
       // graph.amp.linearRampToValueAtTime (0, now + 0.3)
+
       Object.assign (mouse_pos, point_phase (e))
       pointer_down = false
    }
