@@ -80,6 +80,7 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
    async function init_audio () {
       await audio_context.resume ()
       await audio_context.audioWorklet.addModule (`worklets/cute_sine.js`)
+      // await audio_context.audioWorklet.addModule (`worklets/sine_worklet.js`)
 
       graph.sine = new AudioWorkletNode (audio_context, `cute_sine`, {
          processorOptions: {
@@ -90,6 +91,7 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
 
       graph.freq = await graph.sine.parameters.get (`freq`)
       graph.amp  = await graph.sine.parameters.get (`amp`)
+      graph.bright = await graph.sine.parameters.get (`bright`)
    }
 
 
@@ -127,19 +129,24 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
          await init_audio ()
       }
 
-      // const now = audio_context.currentTime
+      const now = audio_context.currentTime
       // prepare_params ([ graph.freq, graph.amp ], now)
 
       // const f = 220 * (2 ** point_phase (e).x)
       // graph.freq_value = f
       // graph.freq.setValueAtTime (f, now + 0.02)
       
-      // graph.amp.linearRampToValueAtTime (0.2, now + 0.02)
+      const phase = point_phase (e)
+      prepare_params ([ graph.amp, graph.bright ], now)
+
+      graph.amp.linearRampToValueAtTime (0.2, now + 0.02)
+      graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.02)
 
       // console.dir (point_phase (e).abs)
       Object.assign (mouse_pos, point_phase (e).abs)
 
-      set_frequency (e)
+      const f = freq_array[Math.floor (phase.x * 12)]
+      set_frequency (e, f)
 
       pointer_down = true
    }
@@ -162,18 +169,32 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
    cnv.onpointermove = e => {
 
       Object.assign (mouse_pos, point_phase (e).abs)
-      set_frequency (e)
+
+      if (audio_context.state != `running`) return
+
+      const phase = point_phase (e)
+      const now = audio_context.currentTime
+
+      prepare_param (graph.bright, now)      
+      graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.02)
+
+      move_frequency (e)
 
    }
 
-function set_frequency (e) {
-   const now = audio_context.currentTime
+function move_frequency (e) {
    const f = freq_array[Math.floor (point_phase (e).x * 12)]
-
    if (f != graph.freq_value) {
+      set_frequency (e, f)
+   }
+}
+
+function set_frequency (e, f) {
       if (!pointer_down || cool_down) return
 
+      const now = audio_context.currentTime
       prepare_param (graph.freq, now)
+
       graph.freq.exponentialRampToValueAtTime (f, now + 0.03)
       graph.freq_value = f
 
@@ -181,7 +202,6 @@ function set_frequency (e) {
       setTimeout (() => {
          cool_down = false
       }, 100)
-   }
 }
 
    cnv.onpointerup = e => {

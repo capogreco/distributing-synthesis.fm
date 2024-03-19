@@ -27,15 +27,20 @@ class CuteSineProcessor extends AudioWorkletProcessor {
             const amp  = deparameterise (parameters.amp,  frame)
             const bright = deparameterise (parameters.bright, frame)
 
+            let bright_dec = (bright * 5) + 1
+
             for (let i = 1; i <= 6; i++) {
-                const full = bright * 6 > i - 1
-                let b_amp = full ? 1 : bright * 6 - i + 1
+                const b_amp = Math.min (bright_dec, 1)
                 sig += Math.sin (this.phase * Math.PI * 2 * i) * (amp / i) * b_amp
+
+                bright_dec -= 1
+                bright_dec = Math.max (bright_dec, 0)
             }
 
             this.phase += this.inc * freq
             this.phase %= 1
             out[frame] = sig
+            // out[frame] = Math.sin (this.phase * Math.PI * 2) * amp
         }
  
        return this.alive
