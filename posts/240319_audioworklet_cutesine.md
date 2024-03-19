@@ -31,13 +31,18 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
    let cool_down = false
    let frame_count = 0
 
+   const audio_context = new AudioContext ()
+   audio_context.suspend ()
+
+   const graph = {}
+
    const mouse_pos = { x : 0, y : 0 }
 
    const total_points = 12
 
    function draw () {
       const circle_points = []
-      ctx.fillStyle = `turquoise`
+      ctx.fillStyle = pointer_down ? `white` : `hotpink`
       ctx.fillRect (0, 0, cnv.width, cnv.height)
 
       const phase_off = frame_count * -1 / (2 ** 12)
@@ -54,24 +59,15 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
             circle_points.push ({ x, y })
          }
 
-         // ctx.moveTo (circle_points[0].x, circle_points[0].y)
          circle_points.forEach ((p, i) => {
-            // const ind = (i + 1) % circle_points.length
             ctx.beginPath()
             ctx.moveTo (mouse_pos.x, mouse_pos.y)
             ctx.lineTo (p.x, p.y)
             ctx.strokeStyle = `hotpink`
-            ctx.lineWidth = 6
+            ctx.lineWidth = 4
 
             ctx.stroke ()
-            // ctx.quadraticCurveTo (mouse_pos.x, mouse_pos.y, circle_points[ind].x, circle_points[ind].y);
          })
-         // ctx.closePath ()
-
-         // ctx.fillStyle = "hotpink";
-         // ctx.fill ()
-
-
       }
 
       frame_count++
@@ -81,74 +77,127 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
 
    draw ()
 
+   async function init_audio () {
+      await audio_context.resume ()
+      await audio_context.audioWorklet.addModule (`worklets/cute_sine.js`)
+
+      graph.sine = new AudioWorkletNode (audio_context, `cute_sine`, {
+         processorOptions: {
+            sample_rate: audio_context.sampleRate
+         }
+      })
+      graph.sine.connect (audio_context.destination)
+
+      graph.freq = await graph.sine.parameters.get (`freq`)
+      graph.amp  = await graph.sine.parameters.get (`amp`)
+   }
+
+
    function point_phase (e) {
       const { target: { 
          offsetLeft, offsetTop, offsetWidth, offsetHeight 
       } } = e
 
       const abs = {
-         x: e.clientX ? e.clientX : e.touches[0].clientX,
-         y: e.clientY ? e.clientY : e.touches[0].clientY
+         x: (e.clientX ? e.clientX : e.touches[0].clientX) - offsetLeft,
+         y: (e.clientY ? e.clientY : e.touches[0].clientY) - offsetTop
       }
 
-      const x = abs.x - offsetLeft
-      const y = abs.y - offsetTop
+      const x = abs.x / offsetWidth
+      const y = abs.y / offsetHeight
 
-      return { x, y }
+      // abs.x -= offsetWidth / 2
+      // abs.y -= offsetHeight / 2
+
+      return { x, y, abs }
       // return abs
    }
 
+   function prepare_param (p, now) {
+      p.cancelScheduledValues (now)
+      p.setValueAtTime (p.value, now)
+   }
+
+   function prepare_params (a, now) {
+      a.forEach (p => prepare_param (p, now))
+   }
 
    cnv.onpointerdown = async e => {
-      // if (audio_context.state != `running`) {
-      //    await init_audio ()
-      // }
+      if (audio_context.state != `running`) {
+         await init_audio ()
+      }
 
       // const now = audio_context.currentTime
       // prepare_params ([ graph.freq, graph.amp ], now)
-      
-      // const f = 220 * (2 ** point_phase (e).x)
-      // graph.freq.exponentialRampToValueAtTime (f, now + 0.3)
-      
-      // graph.amp.linearRampToValueAtTime (0.2, now + 0.1)
 
-      Object.assign (mouse_pos, point_phase (e))
+      // const f = 220 * (2 ** point_phase (e).x)
+      // graph.freq_value = f
+      // graph.freq.setValueAtTime (f, now + 0.02)
+      
+      // graph.amp.linearRampToValueAtTime (0.2, now + 0.02)
+
+      // console.dir (point_phase (e).abs)
+      Object.assign (mouse_pos, point_phase (e).abs)
+
+      set_frequency (e)
 
       pointer_down = true
    }
 
+   const chord = [ 0, 2, 4, 7, 8, 10 ]
+   const root = 58
+
+   const freq_array = []
+   for (let o = 0; o < 3; o++) {
+      for (let n = 0; n < chord.length; n++) {
+         const midi = (o * 12) + chord[n] + root
+         freq_array.push (note_to_cps (midi))
+      }
+   }
+
+   function note_to_cps (n) {
+      return 440 * (2 ** ((n - 69) / 12))
+   }
+
    cnv.onpointermove = e => {
 
-      // if (!pointer_down || cool_down) return
+      Object.assign (mouse_pos, point_phase (e).abs)
+      set_frequency (e)
 
-      // const now = audio_context.currentTime
-      // const f = 220 * (2 ** point_phase (e).x)
-
-      // prepare_param (graph.freq, now)
-      // graph.freq.exponentialRampToValueAtTime (f, now + 0.1)
-
-      // cool_down = true
-      // setTimeout (() => {
-      //    cool_down = false
-      // }, 100)
-
-      Object.assign (mouse_pos, point_phase (e))
    }
+
+function set_frequency (e) {
+   const now = audio_context.currentTime
+   const f = freq_array[Math.floor (point_phase (e).x * 12)]
+
+   if (f != graph.freq_value) {
+      if (!pointer_down || cool_down) return
+
+      prepare_param (graph.freq, now)
+      graph.freq.exponentialRampToValueAtTime (f, now + 0.03)
+      graph.freq_value = f
+
+      cool_down = true
+      setTimeout (() => {
+         cool_down = false
+      }, 100)
+   }
+}
 
    cnv.onpointerup = e => {
 
-      // if (!graph.amp) {
-      //    console.log (`delaying`)
-      //    setTimeout (div.onpointerup, 100, e)
-      //    return
-      // }
+      if (!graph.amp) {
+         console.log (`delaying`)
+         setTimeout (cnv.onpointerup, 100, e)
+         return
+      }
 
-      // const now = audio_context.currentTime
-      // prepare_params ([ graph.freq, graph.amp ], now)
-      // graph.freq.exponentialRampToValueAtTime (16, now + 0.3)
-      // graph.amp.linearRampToValueAtTime (0, now + 0.3)
+      const now = audio_context.currentTime
+      prepare_params ([ graph.freq, graph.amp ], now)
+      // graph.freq.exponentialRampToValueAtTime (16, now + 0.02)
+      graph.amp.linearRampToValueAtTime (0, now + 0.02)
 
-      Object.assign (mouse_pos, point_phase (e))
+      // Object.assign (mouse_pos, point_phase (e))
       pointer_down = false
    }
 
