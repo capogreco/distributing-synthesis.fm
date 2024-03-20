@@ -1,5 +1,3 @@
-import b from "https://esm.sh/v135/marked-footnote@1.2.2/denonext/marked-footnote.mjs";
-
 class CuteSineProcessor extends AudioWorkletProcessor {
 
     constructor ({ processorOptions: { sample_rate } }) {
