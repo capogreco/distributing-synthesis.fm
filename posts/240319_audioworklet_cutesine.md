@@ -14,14 +14,15 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
    cnv.style.backgroundColor = "turquoise"
 
    const width = cnv.parentNode.scrollWidth
+   const height = width * 9 / 16
 
    cnv.width  = width
-   cnv.height = width * 9 / 16
+   cnv.height = height
 
    const ctx = cnv.getContext ('2d')
    ctx.fillStyle = "hotpink";
 
-   const radius = width / 4
+   let radius = width / 4
    const mid = {
       x: cnv.width / 2,
       y: cnv.height / 2, 
@@ -140,12 +141,13 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
       prepare_params ([ graph.amp, graph.bright ], now)
 
       graph.amp.linearRampToValueAtTime (0.2, now + 0.02)
-      graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.02)
+      graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.1)
 
       // console.dir (point_phase (e).abs)
       Object.assign (mouse_pos, point_phase (e).abs)
 
-      const f = freq_array[Math.floor (phase.x * 12)]
+      // const f = freq_array[Math.floor (phase.x * 12)]
+      const f = 220 * (2 ** phase.x)
       set_frequency (e, f)
 
       pointer_down = true
@@ -178,31 +180,34 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
       prepare_param (graph.bright, now)      
       graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.02)
 
-      move_frequency (e)
+      // move_frequency (e)
 
-   }
-
-function move_frequency (e) {
-   const f = freq_array[Math.floor (point_phase (e).x * 12)]
-   if (f != graph.freq_value) {
+      const f = 220 * (2 ** phase.x)
       set_frequency (e, f)
+
    }
-}
 
-function set_frequency (e, f) {
-      if (!pointer_down || cool_down) return
+   function move_frequency (e) {
+      const f = freq_array[Math.floor (point_phase (e).x * 12)]
+      if (f != graph.freq_value) {
+         set_frequency (e, f)
+      }
+   }
 
-      const now = audio_context.currentTime
-      prepare_param (graph.freq, now)
+   function set_frequency (e, f) {
+         if (!pointer_down || cool_down) return
 
-      graph.freq.exponentialRampToValueAtTime (f, now + 0.03)
-      graph.freq_value = f
+         const now = audio_context.currentTime
+         prepare_param (graph.freq, now)
 
-      cool_down = true
-      setTimeout (() => {
-         cool_down = false
-      }, 100)
-}
+         graph.freq.exponentialRampToValueAtTime (f, now + 0.1)
+         graph.freq_value = f
+
+         cool_down = true
+         setTimeout (() => {
+            cool_down = false
+         }, 100)
+   }
 
    cnv.onpointerup = e => {
 
