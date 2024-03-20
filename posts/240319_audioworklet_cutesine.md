@@ -69,6 +69,9 @@ class CuteSineProcessor extends AudioWorkletProcessor {
 
 
 <script type="module">
+   
+   document.body.style.userSelect      = 'none'
+
    const cnv = document.getElementById ("cnv_of_cute")
    cnv.style.backgroundColor = "turquoise"
 
