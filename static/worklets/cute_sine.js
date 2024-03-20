@@ -9,7 +9,7 @@ class CuteSineProcessor extends AudioWorkletProcessor {
  
     static get parameterDescriptors () {
        return [ 
-          { name: 'freq', defaultValue: 16 },
+          { name: 'freq', defaultValue: 220 },
           { name: 'amp',  defaultValue: 0 },
           { name: 'bright', defaultValue: 0 },
        ]

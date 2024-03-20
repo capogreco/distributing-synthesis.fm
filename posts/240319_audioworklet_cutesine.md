@@ -147,14 +147,17 @@ class CuteSineProcessor extends AudioWorkletProcessor {
       // await audio_context.audioWorklet.addModule (`worklets/sine_worklet.js`)
 
       reverbjs.extend (audio_context)
-      
+
+      graph.rev_vol = audio_context.createGain ()
+      graph.rev_vol.gain.value = 0
+      graph.rev_vol.connect (audio_context.destination)
+
       const reverb_url = "/reverb/R1NuclearReactorHall.m4a"
       graph.rev = audio_context.createReverbFromUrl (reverb_url, () => {
-         graph.rev.connect (audio_context.destination)
+         graph.rev.connect (graph.rev_vol)
       })
 
-
-      graph.rev_gate = audio_context.createGain ()
+graph.rev_gate = audio_context.createGain ()
       graph.rev_gate.gain.value = 0
       graph.rev_gate.connect (graph.rev)
 
@@ -216,8 +219,8 @@ class CuteSineProcessor extends AudioWorkletProcessor {
       const inverted_y = 1 - phase.y
       graph.bright.linearRampToValueAtTime (inverted_y, now + 0.1)
 
-      const rev_amp = Math.max (inverted_y - 5)
-      graph.rev_gate.gain.linearRampToValueAtTime (rev_amp, now + 0.1)
+      // const rev_amp = Math.max (inverted_y - 5)
+      // graph.rev_gate.gain.linearRampToValueAtTime (rev_amp, now + 2)
 
       radius = (height / 2) * (1 - phase.y)
 
@@ -287,8 +290,10 @@ class CuteSineProcessor extends AudioWorkletProcessor {
          const inverted_y = 1 - phase.y
          graph.bright.linearRampToValueAtTime (inverted_y, now + 0.1)
 
-         const rev_amp = Math.max (inverted_y - 5)
+         const rev_amp = inverted_y * 0.3
+         // const rev_amp = Math.max (inverted_y * 3 - 2, 0) * 0.2
          graph.rev_gate.gain.linearRampToValueAtTime (rev_amp, now + 0.1)
+         graph.rev_vol .gain.linearRampToValueAtTime (rev_amp, now + 0.1)
 
          graph.freq_value = f
 
@@ -309,7 +314,7 @@ class CuteSineProcessor extends AudioWorkletProcessor {
       const now = audio_context.currentTime
       prepare_params ([ graph.freq, graph.amp ], now)
 
-      graph.freq.exponentialRampToValueAtTime (16, now + 0.02)
+      // graph.freq.exponentialRampToValueAtTime (16, now + 0.02)
       graph.amp.linearRampToValueAtTime (0, now + 0.02)
 
       // Object.assign (mouse_pos, point_phase (e))
