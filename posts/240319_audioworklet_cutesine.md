@@ -143,6 +143,8 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
       graph.amp.linearRampToValueAtTime (0.2, now + 0.02)
       graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.1)
 
+      radius = (height / 2) * (1 - phase.y)
+
       // console.dir (point_phase (e).abs)
       Object.assign (mouse_pos, point_phase (e).abs)
 
@@ -175,8 +177,10 @@ Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/s
       if (audio_context.state != `running`) return
 
       const phase = point_phase (e)
-      const now = audio_context.currentTime
+      radius = (height / 2) * (1 - phase.y)
 
+      const now = audio_context.currentTime
+      
       prepare_param (graph.bright, now)      
       graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.02)
 
