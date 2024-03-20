@@ -1,11 +1,11 @@
 ---
-title: Cute Sine
+title: Beauty Song Contest
 published_at: 2024-03-19
 snippet: with audio worklet
 disable_html_sanitization: true
 ---
 
-Homage to the cutest of Sianne Ngai's [three categories](https://www.jstor.org/stable/41058295).
+A science family of Sianne Ngai's [three categories](https://www.jstor.org/stable/41058295).
 
 <canvas id="cnv_of_cute"></canvas>
 
@@ -94,7 +94,7 @@ class CuteSineProcessor extends AudioWorkletProcessor {
 
    const mouse_pos = { x : 0, y : 0 }
 
-   const total_points = 12
+   const total_points = 5
 
    function draw () {
       const circle_points = []
@@ -185,13 +185,7 @@ class CuteSineProcessor extends AudioWorkletProcessor {
          await init_audio ()
       }
 
-      const now = audio_context.currentTime
-      // prepare_params ([ graph.freq, graph.amp ], now)
-
-      // const f = 220 * (2 ** point_phase (e).x)
-      // graph.freq_value = f
-      // graph.freq.setValueAtTime (f, now + 0.02)
-      
+      const now = audio_context.currentTime      
       const phase = point_phase (e)
       prepare_params ([ graph.amp, graph.bright ], now)
 
@@ -200,7 +194,6 @@ class CuteSineProcessor extends AudioWorkletProcessor {
 
       radius = (height / 2) * (1 - phase.y)
 
-      // console.dir (point_phase (e).abs)
       Object.assign (mouse_pos, point_phase (e).abs)
 
       // const f = freq_array[Math.floor (phase.x * 12)]
@@ -236,8 +229,8 @@ class CuteSineProcessor extends AudioWorkletProcessor {
 
       const now = audio_context.currentTime
 
-      prepare_param (graph.bright, now)      
-      graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.02)
+      // prepare_param (graph.bright, now)
+      // graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.1)
 
       // move_frequency (e)
 
@@ -256,9 +249,13 @@ class CuteSineProcessor extends AudioWorkletProcessor {
    function set_frequency (e, f) {
          if (!pointer_down || cool_down) return
 
+         const phase = point_phase (e)
+
          const now = audio_context.currentTime
          prepare_param (graph.freq, now)
+         prepare_param (graph.bright, now)
 
+         graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.05)
          graph.freq.exponentialRampToValueAtTime (f, now + 0.1)
          graph.freq_value = f
 
@@ -278,7 +275,8 @@ class CuteSineProcessor extends AudioWorkletProcessor {
 
       const now = audio_context.currentTime
       prepare_params ([ graph.freq, graph.amp ], now)
-      // graph.freq.exponentialRampToValueAtTime (16, now + 0.02)
+
+      graph.freq.exponentialRampToValueAtTime (16, now + 0.02)
       graph.amp.linearRampToValueAtTime (0, now + 0.02)
 
       // Object.assign (mouse_pos, point_phase (e))
