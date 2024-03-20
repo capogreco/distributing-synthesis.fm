@@ -9,7 +9,7 @@ A science family of Sianne Ngai's [three categories](https://www.jstor.org/stabl
 
 <canvas id="cnv_of_cute"></canvas>
 
-*^ click and drag for control.*
+*^ click and drag for control*
 
 ```js
 // cute_sine.js
