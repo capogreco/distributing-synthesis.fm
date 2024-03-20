@@ -69,7 +69,8 @@ class CuteSineProcessor extends AudioWorkletProcessor {
 
 
 <script type="module">
-   
+   import { reverbjs } from '/reverb/reverb.js'
+
    document.body.style.userSelect      = 'none'
 
    const cnv = document.getElementById ("cnv_of_cute")
@@ -145,12 +146,26 @@ class CuteSineProcessor extends AudioWorkletProcessor {
       await audio_context.audioWorklet.addModule (`worklets/cute_sine.js`)
       // await audio_context.audioWorklet.addModule (`worklets/sine_worklet.js`)
 
+      reverbjs.extend (audio_context)
+      
+      const reverb_url = "/reverb/R1NuclearReactorHall.m4a"
+      graph.rev = audio_context.createReverbFromUrl (reverb_url, () => {
+         graph.rev.connect (audio_context.destination)
+      })
+
+
+      graph.rev_gate = audio_context.createGain ()
+      graph.rev_gate.gain.value = 0
+      graph.rev_gate.connect (graph.rev)
+
+
       graph.sine = new AudioWorkletNode (audio_context, `cute_sine`, {
          processorOptions: {
             sample_rate: audio_context.sampleRate
          }
       })
       graph.sine.connect (audio_context.destination)
+      graph.sine.connect (graph.rev_gate)
 
       graph.freq = await graph.sine.parameters.get (`freq`)
       graph.amp  = await graph.sine.parameters.get (`amp`)
@@ -197,7 +212,12 @@ class CuteSineProcessor extends AudioWorkletProcessor {
       prepare_params ([ graph.amp, graph.bright ], now)
 
       graph.amp.linearRampToValueAtTime (0.2, now + 0.02)
-      graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.1)
+
+      const inverted_y = 1 - phase.y
+      graph.bright.linearRampToValueAtTime (inverted_y, now + 0.1)
+
+      const rev_amp = Math.max (inverted_y - 5)
+      graph.rev_gate.gain.linearRampToValueAtTime (rev_amp, now + 0.1)
 
       radius = (height / 2) * (1 - phase.y)
 
@@ -262,8 +282,14 @@ class CuteSineProcessor extends AudioWorkletProcessor {
          prepare_param (graph.freq, now)
          prepare_param (graph.bright, now)
 
-         graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.05)
          graph.freq.exponentialRampToValueAtTime (f, now + 0.1)
+
+         const inverted_y = 1 - phase.y
+         graph.bright.linearRampToValueAtTime (inverted_y, now + 0.1)
+
+         const rev_amp = Math.max (inverted_y - 5)
+         graph.rev_gate.gain.linearRampToValueAtTime (rev_amp, now + 0.1)
+
          graph.freq_value = f
 
          cool_down = true
