@@ -9,6 +9,8 @@ A science family of Sianne Ngai's [three categories](https://www.jstor.org/stabl
 
 <canvas id="cnv_of_cute"></canvas>
 
+*^ click and drag for control.*
+
 ```js
 // cute_sine.js
 class CuteSineProcessor extends AudioWorkletProcessor {
@@ -63,6 +65,8 @@ class CuteSineProcessor extends AudioWorkletProcessor {
     return arr[(1 != arr.length) * ind]
  }
  ```
+
+
 
 <script type="module">
    const cnv = document.getElementById ("cnv_of_cute")
