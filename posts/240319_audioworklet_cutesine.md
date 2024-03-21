@@ -257,7 +257,7 @@ class CuteSineProcessor extends AudioWorkletProcessor {
    }
 
    cnv.onpointermove = e => {
-
+      e.preventDefault ()
       Object.assign (mouse_pos, point_phase (e).abs)
 
       if (audio_context.state != `running`) return
