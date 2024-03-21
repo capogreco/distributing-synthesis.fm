@@ -1,17 +1,22 @@
 ---
-title: Beauty Song Contest
+title: Beauty Science
 published_at: 2024-03-19
 snippet: with audio worklet
 disable_html_sanitization: true
 ---
 
-A science family of Sianne Ngai's [three categories](https://www.jstor.org/stable/41058295).
+<!-- A science family[^1] of Sianne Ngai's three categories.[^2]
+
+[^1]: a non-romantic homage to the work of [Rafaël Rozendaal](https://www.newrafael.com/websites/)
+
+[^2]: Ngai, Sianne. “Our Aesthetic Categories.” PMLA : Publications of the Modern Language Association of America 125, no. 4 (2010): 948–58. https://doi.org/10.1632/pmla.2010.125.4.948. -->
+
 
 <canvas id="cnv_of_cute"></canvas>
 
 *^ click and drag for control*
 
-```js
+<!-- ```js
 // cute_sine.js
 class CuteSineProcessor extends AudioWorkletProcessor {
 
@@ -64,14 +69,16 @@ class CuteSineProcessor extends AudioWorkletProcessor {
  function deparameterise (arr, ind) {
     return arr[(1 != arr.length) * ind]
  }
- ```
+ ``` -->
 
 
 
 <script type="module">
-   import { reverbjs } from '/reverb/reverb.js'
+   // import { reverbjs } from '/reverb/reverb.js'
 
-   document.body.style.userSelect      = 'none'
+   document.body.style.userSelect = `none`
+   // document.body.syle.overflow    = `hidden`
+
 
    const cnv = document.getElementById ("cnv_of_cute")
    cnv.style.backgroundColor = "turquoise"
@@ -143,23 +150,24 @@ class CuteSineProcessor extends AudioWorkletProcessor {
 
    async function init_audio () {
       await audio_context.resume ()
+      console.log (audio_context.state)
+
       await audio_context.audioWorklet.addModule (`worklets/cute_sine.js`)
-      // await audio_context.audioWorklet.addModule (`worklets/sine_worklet.js`)
+      console.dir (audio_context.audioWorklet)
+      // reverbjs.extend (audio_context)
 
-      reverbjs.extend (audio_context)
+      // graph.rev_vol = audio_context.createGain ()
+      // graph.rev_vol.gain.value = 0
+      // graph.rev_vol.connect (audio_context.destination)
 
-      graph.rev_vol = audio_context.createGain ()
-      graph.rev_vol.gain.value = 0
-      graph.rev_vol.connect (audio_context.destination)
+      // const reverb_url = "/reverb/R1NuclearReactorHall.m4a"
+      // graph.rev = audio_context.createReverbFromUrl (reverb_url, () => {
+      //    graph.rev.connect (graph.rev_vol)
+      // })
 
-      const reverb_url = "/reverb/R1NuclearReactorHall.m4a"
-      graph.rev = audio_context.createReverbFromUrl (reverb_url, () => {
-         graph.rev.connect (graph.rev_vol)
-      })
-
-graph.rev_gate = audio_context.createGain ()
-      graph.rev_gate.gain.value = 0
-      graph.rev_gate.connect (graph.rev)
+      // graph.rev_gate = audio_context.createGain ()
+      // graph.rev_gate.gain.value = 0
+      // graph.rev_gate.connect (graph.rev)
 
 
       graph.sine = new AudioWorkletNode (audio_context, `cute_sine`, {
@@ -168,10 +176,10 @@ graph.rev_gate = audio_context.createGain ()
          }
       })
       graph.sine.connect (audio_context.destination)
-      graph.sine.connect (graph.rev_gate)
+      // graph.sine.connect (graph.rev_gate)
 
-      graph.freq = await graph.sine.parameters.get (`freq`)
-      graph.amp  = await graph.sine.parameters.get (`amp`)
+      graph.freq   = await graph.sine.parameters.get (`freq`)
+      graph.amp    = await graph.sine.parameters.get (`amp`)
       graph.bright = await graph.sine.parameters.get (`bright`)
    }
 
@@ -257,11 +265,9 @@ graph.rev_gate = audio_context.createGain ()
       const phase = point_phase (e)
       radius = (height / 2) * (1 - phase.y)
 
-      const now = audio_context.currentTime
-
+      // const now = audio_context.currentTime
       // prepare_param (graph.bright, now)
       // graph.bright.linearRampToValueAtTime (1 - phase.y, now + 0.1)
-
       // move_frequency (e)
 
       const f = 220 * (2 ** phase.x)
@@ -290,10 +296,9 @@ graph.rev_gate = audio_context.createGain ()
          const inverted_y = 1 - phase.y
          graph.bright.linearRampToValueAtTime (inverted_y, now + 0.1)
 
-         const rev_amp = inverted_y * 0.3
-         // const rev_amp = Math.max (inverted_y * 3 - 2, 0) * 0.2
-         graph.rev_gate.gain.linearRampToValueAtTime (rev_amp, now + 0.1)
-         graph.rev_vol .gain.linearRampToValueAtTime (rev_amp, now + 0.1)
+         // const rev_amp = inverted_y * 0.3
+         // graph.rev_gate.gain.linearRampToValueAtTime (rev_amp, now + 0.1)
+         // graph.rev_vol .gain.linearRampToValueAtTime (rev_amp, now + 0.1)
 
          graph.freq_value = f
 
