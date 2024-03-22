@@ -14,7 +14,7 @@ disable_html_sanitization: true
 
 <canvas id="cnv_of_cute"></canvas>
 
-*^ click and drag in an anticlockwise manner*
+*^ click & drag, in an anticlockwise fashion*
 
 <!-- ```js
 // cute_sine.js
