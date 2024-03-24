@@ -1,7 +1,7 @@
 ---
-title: Beauty Science
+title: Infinite Appreciation
 published_at: 2024-03-19
-snippet: with audio worklet
+snippet: beauty man appreciates science
 disable_html_sanitization: true
 ---
 
@@ -14,7 +14,7 @@ disable_html_sanitization: true
 
 <canvas id="cnv_of_cute"></canvas>
 
-*^ click & drag, in an anticlockwise fashion*
+*^ click & drag in a generous, anticlockwise fashion*
 
 <!-- ```js
 // cute_sine.js
