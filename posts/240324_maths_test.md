@@ -77,7 +77,7 @@ process (_inputs, outputs, parameters) {
 }
 ```
 
-Hear it → [here](https://lcld.xyz/240326_infinite_appreciation)
+Find an implementation of this code → [here](https://lcld.xyz/240326_infinite_appreciation)
 
-Find out more about how [`AudioWorklet`](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet) works → [here](https://distributing-synthesis.fm/240318_audioworklet_basics)
+Learn more about how [`AudioWorklet`](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet) works → [here](https://distributing-synthesis.fm/240318_audioworklet_basics)
 
