@@ -6,7 +6,7 @@ disable_html_sanitization: true
 allow_math: true
 ---
 
-As a digital music instrument design project that uses internet communication protocols to coalesce audience's devices' sound synthesis and loudspeaker capabilities, it garnered the name **DXΣ** -- an homage to the [Yamaha DX7](https://en.wikipedia.org/wiki/Yamaha_DX7), modified with a bit of an additional inflectlion to reflect the mathematical process of summation, in which the addition of a series of similar terms can be denoted by the Greek capital letter *sigma*, e.g.
+As a digital music instrument design project that uses internet communication protocols to coalesce audience's devices' sound synthesis and loudspeaker capabilities, it garnered the name **DXΣ** -- an homage to the [Yamaha DX7](https://en.wikipedia.org/wiki/Yamaha_DX7), mutated to inflect the mathematical process of summation, in which the addition of a series of similar terms can be denoted by the Greek capital letter *sigma*, e.g.
 
 $$ \sum_{n=1}^{6}2n=(2\times1)+(2\times2)+(2\times3)+...+(2\times6) $$
 
