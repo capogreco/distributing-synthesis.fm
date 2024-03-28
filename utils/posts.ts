@@ -29,7 +29,7 @@ export async function getPosts(): Promise<Post[]> {
 // Get post.
 export async function getPost(slug: string): Promise<Post | null> {
   // console.dir (slug)
-  const text = await Deno.readTextFile(join(DIRECTORY, `${slug}.md`));
+  const text = await Deno.readTextFile(join(DIRECTORY, `${ slug }.md`));
   const { attrs, body } = extract(text);
   return {
     slug,
