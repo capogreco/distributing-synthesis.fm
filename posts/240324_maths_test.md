@@ -1,14 +1,14 @@
 ---
-title: Mathematical Moment
+title: Summation of Similar Terms
 published_at: 2024-03-19
 snippet: you be the judge
 disable_html_sanitization: true
 allow_math: true
 ---
 
-As a digital music instrument design project that uses internet communication protocols to coalesce audience's devices' sound synthesis and loudspeaker capabilities, it garnered the name **DXΣ** -- an homage to the [Yamaha DX7](https://en.wikipedia.org/wiki/Yamaha_DX7), mutated to inflect the mathematical process of summation, in which the addition of a series of similar terms can be denoted by the Greek capital letter _sigma_, e.g.
+As a digital music instrument design project that endeavours to coalesce audience's devices' sound synthesis and loudspeaker capabilities, it garnered the name **DXΣ** -- an homage to the [Yamaha DX7](https://en.wikipedia.org/wiki/Yamaha_DX7) inflecting the mathematical process of summation, in which the addition of a series of similar terms can be denoted by the Greek capital letter _sigma_, e.g.
 
-$$ \sum\_{n=1}^{6}2n=(2\times1)+(2\times2)+(2\times3)+...+(2\times6) $$
+$$ \sum_{n=1}^{6}2n=(2\times1)+(2\times2)+(2\times3)+...+(2\times6) $$
 
 By specifying an index of summation (in this case, $n$), a lower bound ( $1$ ), an upper bound ( $6$ ), and a function to iterate ( $2n$ ), capital-sigma notation describes an algorithm by which a series of similar terms can be generated and summed together.
 
@@ -32,11 +32,11 @@ $$ y = A sin(ωx + φ) $$
 
 ... where $A$, $ω$, and $φ$ are the _amplitude_, _frequency_, and _phase_ of a sinusoidal harmonic, we might understand the following:
 
-$$ \sum\_{ω=1}^{∞}\frac{1}{ω}sin(ωx+φ) $$
+$$ \sum_{ω=1}^{∞}\frac{1}{ω}sin(ωx+φ) $$
 
 ... to describe a sawtooth wave function, and:
 
-$$ \sum\_{ω=1}^{6}\frac{1}{ω}sin(ωx+φ) $$
+$$ \sum_{ω=1}^{6}\frac{1}{ω}sin(ωx+φ) $$
 
 ... to describe the first six harmonics of just such a sawtooth.
 
