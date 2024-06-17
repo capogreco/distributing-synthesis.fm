@@ -1,12 +1,12 @@
 ---
 title: Summation of Similar Terms
 published_at: 2024-03-19
-snippet: you be the judge
+snippet: A formal analogy.
 disable_html_sanitization: true
 allow_math: true
 ---
 
-As a digital music instrument design project that endeavours to coalesce audience's devices' sound synthesis and loudspeaker capabilities, it garnered the name **DXΣ** -- an homage to the [Yamaha DX7](https://en.wikipedia.org/wiki/Yamaha_DX7) inflecting the mathematical process of summation, in which the addition of a series of similar terms can be denoted by the Greek capital letter _sigma_, e.g.
+As a digital music instrument design project that endeavours to coalesce audience's devices' sound synthesis and loudspeaker capabilities, it garnered the name **DXΣ** -- an homage to the [Yamaha DX7](https://en.wikipedia.org/wiki/Yamaha_DX7), but inflected to reference the mathematical process of summation, in which the addition of a series of similar terms is denoted by "Σ" - the Greek capital letter _sigma_. For example:
 
 $$ \sum_{n=1}^{6}2n=(2\times1)+(2\times2)+(2\times3)+...+(2\times6) $$
 
