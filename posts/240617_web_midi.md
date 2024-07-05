@@ -17,21 +17,36 @@ This post will detail how to implement MIDI control in the browser via [Web MIDI
 
 *... although theoretically any USB MIDI device supported by your operating system should work.*
 
-## MIDI Permission
+## The Navigator Object
 
-<div id="midi_query">click to query MIDI permission</div>
+The [navigator object](https://developer.mozilla.org/en-US/docs/Web/API/Navigator) represents an [interface](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Introduction) with which javascript can access various information and behaviours provided by the web browser.  It is through this object that we can use javascript to ask the browser for access to various aspects of the device's hardware, such as USB MIDI devices that might be connected, for example.
+
+Technically, `navigator` is a property of the `window` object (so, `window.navigator`) but we can also just access it via the variable name `navigator`, which is given to us for free when our javascript is run in a browser.
+
+## MIDI Permissions
+
+We can use:
+
+```js
+navigator.permissions.query ({ 
+      name: `midi`, 
+      sysex: true 
+})
+```
+
+... to check whether your browser has permission to access connected USB MIDI devices.
+
+<div id="midi_query">click to query MIDI permissions</div>
 
 <script type="module">
    const div = document.getElementById ('midi_query')
    div.width = div.parentNode.scrollWidth
-   div.style.height = `${ div.width * 9 / 32 }px`
-   div.style.backgroundColor = `darkmagenta`
-   div.style.textAlign  = 'center'
-   div.style.lineHeight = div.style.height
-   div.style.fontSize   = '36px'
-   div.style.fontWeight = 'bold'
-   div.style.fontStyle  = 'italic'
-   div.style.color      = 'white'
+   const height = `${ div.width * 9 / 32 }px`
+   Object.assign (div.style, {
+      height, lineHeight: height, backgroundColor: `darkmagenta`,
+      fontWeight: `bold`, fontStyle: `italic`, textAlign: `center`,
+      fontSize: `36px`, color: `white`
+   })
 
    div.onpointerdown = async e => {
       const response = await navigator.permissions.query ({ 
@@ -39,65 +54,303 @@ This post will detail how to implement MIDI control in the browser via [Web MIDI
          sysex: true 
       })
 
-      console.dir (response)
+      const handler = {
+         prompt: () => div.style.backgroundColor = `sienna`,
+         granted: () => div.style.backgroundColor = `darkolivegreen`,
+         denied: () => div.style.backgroundColor = `crimson`
+      }
 
-      div.innerText = `midi permission: ${ response.state }`
+      handler[response.state] ()
       
-      if (response.state == `granted`) {
-         div.style.backgroundColor = `darkolivegreen`
+      div.innerText = response.state
+   }
+</script>
+
+```html
+<div id="midi_query">click to query MIDI permissions</div>
+
+<script type="module">
+   const div = document.getElementById ('midi_query')
+   div.width = div.parentNode.scrollWidth
+   const height = `${ div.width * 9 / 32 }px`
+   Object.assign (div.style, {
+      height, lineHeight: height, backgroundColor: `darkmagenta`,
+      fontWeight: `bold`, fontStyle: `italic`, textAlign: `center`,
+      fontSize: `36px`, color: `white`
+   })
+
+   div.onpointerdown = async e => {
+      const response = await navigator.permissions.query ({ 
+         name: `midi`, 
+         sysex: true 
+      })
+
+      const handler = {
+         prompt:  () => div.style.backgroundColor = `sienna`,
+         granted: () => div.style.backgroundColor = `darkolivegreen`,
+         denied:  () => div.style.backgroundColor = `crimson`
+      }
+
+      handler[response.state] ()
+      
+      div.innerText = response.state
+   }
+</script>
+```
+
+While permission state of "prompt" means that if a MIDI Access Request is made in your javascript, a prompt to appear for users to confirm the Web MIDI API's permission status:
+
+
+<div align="center"><img src="/240617/prompt.png" /></div>
+
+... a permission status of "granted" will allow connected USB MIDI devices to appear on the MIDIAccess object returned by the access request, and a permission status of "denied" will not allow your javascript to communicate with connected USB MIDI devices.
+
+## Requesting MIDI Access
+
+We can request access to the Web MIDI API with:
+
+```js
+navigator.requestMIDIAccess ()
+```
+
+... which will return a [MIDIAccess object](https://developer.mozilla.org/en-US/docs/Web/API/MIDIAccess), which has `.inputs`, `.outputs`, and `sysexEnabled` properties.  
+
+As we want to use a MIDI controller (as opposed to a MIDI instrument), we will be focussing on the [MIDIInputMap object](https://developer.mozilla.org/en-US/docs/Web/API/MIDIInputMap) accessible via the `.input` property.
+
+Consider the following code (comments are provided inline):
+
+<div id="midi_request">click to request MIDI access</div>
+
+<script type="module">
+   const div = document.getElementById (`midi_request`)
+   div.width = div.parentNode.scrollWidth
+   const height = `${ div.width * 9 / 32 }px`
+   Object.assign (div.style, {
+      height, lineHeight: height, backgroundColor: `darkmagenta`,
+      fontWeight: `bold`, fontStyle: `italic`, textAlign: `center`,
+      fontSize: `36px`, color: `white`
+   })
+
+   div.onpointerdown = async () => {
+
+      // request MIDI access &
+      // assign MIDIAcess object to 'midi'
+      const midi = await navigator.requestMIDIAccess ()
+
+      // initialise empty string
+      let str = ``
+
+      // iterate over the MIDIInputMap object to
+      // go through the list of input devices
+      midi.inputs.forEach (device => {
+
+         // add each device's 
+         // manufacture and name 
+         // to the string
+         str += `${ device.manufacturer } ${ device.name }\n`
+      })
+
+      // if the string is still empty
+      // give it 'no inputs detected' message
+      str = str == `` ? `no inputs detected` : str
+
+      // print the string into the div
+      div.innerText = str
+   }
+</script>
+
+```html
+<div id="midi_request">click to request MIDI access</div>
+
+<script type="module">
+   const div = document.getElementById (`midi_request`)
+   div.width = div.parentNode.scrollWidth
+   const height = `${ div.width * 9 / 32 }px`
+   Object.assign (div.style, {
+      height, lineHeight: height, backgroundColor: `darkmagenta`,
+      fontWeight: `bold`, fontStyle: `italic`, textAlign: `center`,
+      fontSize: `36px`, color: `white`
+   })
+
+   div.onpointerdown = async () => {
+
+      // request MIDI access &
+      // assign MIDIAcess object to 'midi'
+      const midi = await navigator.requestMIDIAccess ()
+
+      // initialise empty string
+      let str = ``
+
+      // iterate over the MIDIInputMap object to
+      // go through the list of input devices
+      midi.inputs.forEach (device => {
+
+         // add each device's 
+         // manufacture and name 
+         // to the string
+         str += `${ device.manufacturer } ${ device.name }\n`
+      })
+
+      // if the string is still empty
+      // give it 'no inputs detected' message
+      str = str == `` ? `no inputs detected` : str
+
+      // print the string into the div
+      div.innerText = str
+   }
+</script>
+```
+It is worth noting that the elements being passed to the `device` parameter, in the code above, are instances of [MIDIInput](https://developer.mozilla.org/en-US/docs/Web/API/MIDIInput).
+
+
+## Plugging In, and Unplugging, MIDI Devices
+
+It is also worth noting that we can handle changes on the hardware side of Web MIDI API by assigning a handler function to the `.onstatechange` property of the MIDIAccess object returned by `.requestMIDIAccess ()`.  For example:
+
+```js
+const midi = await navigator.requestMIDIAccess ()
+midi.onstatechange = e => console.dir (e)
+```
+
+... will print a [MIDIConnectionEvent](https://developer.mozilla.org/en-US/docs/Web/API/MIDIConnectionEvent) to the console any time a USB MIDI device is plugged in, or unplugged.
+
+Plugging in the MC-24 prints two such event objects to the console:
+
+<div align="center"><img src="/240617/connection_events.png" /></div>
+
+If we inspect the `.port` attribute of each object, we can see that the two objects are in fact not identical: one represents an input device, the other, an output device:
+
+<div align="center"><img src="/240617/connection_event_ports.png" /></div>
+
+
+With this knowledge, we can handle plugging in and unplugging behaviour explicitly.
+
+For example, try connecting (or disconnecting), a USB MIDI device:
+
+<div id="plug_midi"></div>
+
+<script type="module">
+   const div = document.getElementById (`plug_midi`)
+   div.width = div.parentNode.scrollWidth
+   const height = `${ div.width * 9 / 16 }px`
+   Object.assign (div.style, {
+      height, backgroundColor: `darkmagenta`,
+      fontWeight: `bold`, fontStyle: `italic`,
+      fontSize: `24px`, color: `white`
+   })
+
+   const midi = await navigator.requestMIDIAccess ()
+   midi.onstatechange = e => {
+      if (e.port instanceof MIDIInput) {
+         div.innerText += `${ e.port.name } was ${ e.port.state }\n`
       }
    }
 </script>
 
 ```html
-<div id="midi_query">click to query MIDI permission</div>
+<div id="plug_midi"></div>
 
 <script type="module">
-   const div = document.getElementById ('midi_query')
+   const div = document.getElementById (`plug_midi`)
    div.width = div.parentNode.scrollWidth
-   div.style.height = `${ div.width * 9 / 32 }px`
-   div.style.backgroundColor = `darkmagenta`
-   div.style.textAlign  = 'center'
-   div.style.lineHeight = div.style.height
-   div.style.fontSize   = '36px'
-   div.style.fontWeight = 'bold'
-   div.style.fontStyle  = 'italic'
-   div.style.color      = 'white'
+   const height = `${ div.width * 9 / 16 }px`
+   Object.assign (div.style, {
+      height, backgroundColor: `darkmagenta`,
+      fontWeight: `bold`, fontStyle: `italic`,
+      fontSize: `24px`, color: `white`
+   })
 
-   div.onpointerdown = async e => {
-      const response = await navigator.permissions.query ({ 
-         name: `midi`, 
-         sysex: true 
-      })
-
-      console.dir (response)
-
-      div.innerText = `midi permission: ${ response.state }`
-      
-      if (response.state == `granted`) {
-         div.style.backgroundColor = `darkolivegreen`
+   const midi = await navigator.requestMIDIAccess ()
+   midi.onstatechange = e => {
+      if (e.port instanceof MIDIInput) {
+         div.innerText += `${ e.port.name } was ${ e.port.state }\n`
       }
    }
 </script>
 ```
 
+## Receiving MIDI Messages
 
-<!-- <script type="module">
-   const midi_handler = e => {
-      let str = `MIDI message received at timestamp ${ e.timeStamp }[${ e.data.length } bytes]: `
-      for (const char of e.data) {
-         str += `0x${ char.toString (16) } `
-      }
-      console.log (str)
-   }
+<div id="midi_messages">send a MIDI control message</div>
 
-   const log_midi = m => {
-      m.inputs.forEach (entry => {
-         entry.onmidimessage = midi_handler
-      })
-   }
-
-   navigator.requestMIDIAccess ().then (midi => {
-      log_midi (midi)
+<script type="module">
+   const div = document.getElementById (`midi_messages`)
+   div.width = div.parentNode.scrollWidth
+   const height = `${ div.width * 9 / 32 }px`
+   Object.assign (div.style, {
+      height, lineHeight: height, backgroundColor: `darkmagenta`,
+      fontFamily:`monospace`, textAlign: `center`,
+      fontSize: `36px`, color: `white`
    })
-</script> -->
+
+   // function for making strings the same number of characters
+   const rectify = (s, w, c) => {
+      if (s.length >= w) return s
+      else return (Array (w).join (c) + s).slice (-w)
+   }
+
+   // define a handler for midi messages
+   const midi_handler = e => {
+      const control = rectify (e.data[1], 2, `0`)
+      const value   = rectify (e.data[2], 3, `0`)
+      div.innerText = `${ e.target.name }: control ${ control }, value ${ value }`
+   }
+
+   // assign the handler to already connected devices
+   const midi = await navigator.requestMIDIAccess ()
+   midi.inputs.forEach (device => {
+      device.onmidimessage = midi_handler
+   })
+
+   // if a new device connects, assign the handler to it as well
+   midi.onstatechange = e => {
+      if (e.port instanceof MIDIInput && e.port.state === `connected`) {
+         e.port.onmidimessage = midi_handler
+      }
+   }
+</script>
+
+```html
+<div id="midi_messages">send a MIDI control message</div>
+
+<script type="module">
+   const div = document.getElementById (`midi_messages`)
+   div.width = div.parentNode.scrollWidth
+   const height = `${ div.width * 9 / 32 }px`
+   Object.assign (div.style, {
+      height, lineHeight: height, backgroundColor: `darkmagenta`,
+      fontFamily:`monospace`, textAlign: `center`,
+      fontSize: `36px`, color: `white`
+   })
+
+   // function for making strings the same number of characters
+   const rectify = (s, w, c) => {
+      if (s.length >= w) return s
+      else return (Array (w).join (c) + s).slice (-w)
+   }
+
+   // define a handler for midi messages
+   const midi_handler = e => {
+      const control = rectify (e.data[1], 2, `0`)
+      const value   = rectify (e.data[2], 3, `0`)
+      div.innerText = `${ e.target.name }: control ${ control }, value ${ value }`
+   }
+
+   // assign the handler to already connected devices
+   const midi = await navigator.requestMIDIAccess ()
+   midi.inputs.forEach (device => {
+      device.onmidimessage = midi_handler
+   })
+
+   // if a new device connects, assign the handler to it as well
+   midi.onstatechange = e => {
+      if (e.port instanceof MIDIInput && e.port.state === `connected`) {
+         e.port.onmidimessage = midi_handler
+      }
+   }
+</script>
+```
+
+It is worth noting that the [midimessage event](https://developer.mozilla.org/en-US/docs/Web/API/MIDIInput/midimessage_event) passed into `midi_handler` contains an array of length three on its `.data` property, the first of which representing "status", which in the case of MIDI control messages, will always be `176`.  
+
+As the status information is not super important in this use case, we are ignoring it, and instead using the second and third elements of the `.data` array, representing "controller" and "value", respectively.
