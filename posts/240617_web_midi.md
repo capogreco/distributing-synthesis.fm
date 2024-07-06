@@ -353,4 +353,150 @@ For example, try connecting (or disconnecting), a USB MIDI device:
 
 It is worth noting that the [midimessage event](https://developer.mozilla.org/en-US/docs/Web/API/MIDIInput/midimessage_event) passed into `midi_handler` contains an array of length three on its `.data` property, the first of which representing "status", which in the case of MIDI control messages, will always be `176`.  
 
-As the status information is not super important in this use case, we are ignoring it, and instead using the second and third elements of the `.data` array, representing "controller" and "value", respectively.
+As the status information is not super important in this use case, we can ignore it, and instead use the second and third elements of the `.data` array, which represent "controller" and "value", respectively.
+
+## Control Knob
+
+<canvas id="knob"></canvas>
+
+<script type="module">
+   const cnv = document.getElementById (`knob`)
+   const w = cnv.parentNode.scrollWidth
+   cnv.width = w
+   cnv.height = w
+
+   const ctx = cnv.getContext (`2d`)
+
+   const tau = Math.PI * 2
+
+   // function takes a control number
+   // and a value between 0-127
+   // and draws a knob to the canvas
+   const midi_knob = (c, v) => {
+      const r = tau * 0.75 * v / 127
+      const k = tau * -0.125
+
+      const p1 = {
+         x: (w * 0.5) + (w * 0.4 * Math.sin (k - r)),
+         y: (w * 0.5) + (w * 0.4 * Math.cos (k - r))
+      }
+
+      const p2 = {
+         x: (w * 0.5) + (w * 0.2 * Math.sin (k - r)),
+         y: (w * 0.5) + (w * 0.2 * Math.cos (k - r))
+      }
+
+      ctx.fillStyle = `darkmagenta`
+      ctx.fillRect (0, 0, w, w)
+
+      ctx.strokeStyle = `white`
+      ctx.lineWidth = w * 0.1
+
+      ctx.beginPath ()
+      ctx.arc (w * 0.5, w * 0.5, w * 0.3, r, tau * 0.75 + r, false)
+      ctx.moveTo (p1.x, p1.y)
+      ctx.lineTo (p2.x, p2.y)
+      ctx.stroke ()
+
+      ctx.fillStyle = `white`
+      ctx.font = `bold ${ w * 0.2 }px sans-serif`
+
+      ctx.textAlign = `center`
+      ctx.fillText (v, w * 0.5, w * 0.57)
+
+      ctx.font = `bold ${ w * 0.15 }px sans-serif`
+      ctx.textAlign = `left`
+      ctx.fillText (c, w * 0.03, w * 0.15)
+   }
+
+   // define a handler for midi messages
+   const midi_handler = e => midi_knob (e.data[1], e.data[2])
+
+   // assign the handler to already connected devices
+   const midi = await navigator.requestMIDIAccess ()
+   midi.inputs.forEach (device => {
+      device.onmidimessage = midi_handler
+   })
+
+   // if a new device connects, assign the handler to it as well
+   midi.onstatechange = e => {
+      if (e.port instanceof MIDIInput && e.port.state === `connected`) {
+         e.port.onmidimessage = midi_handler
+      }
+   }
+
+   midi_knob (0, 0)
+</script>
+
+```html
+<canvas id="knob"></canvas>
+
+<script type="module">
+   const cnv = document.getElementById (`knob`)
+   const w = cnv.parentNode.scrollWidth
+   cnv.width = w
+   cnv.height = w
+
+   const ctx = cnv.getContext (`2d`)
+
+   const tau = Math.PI * 2
+
+   // function takes a control number
+   // and a value between 0-127
+   // and draws a knob to the canvas
+   const midi_knob = (c, v) => {
+      const r = tau * 0.75 * v / 127
+      const k = tau * -0.125
+
+      const p1 = {
+         x: (w * 0.5) + (w * 0.4 * Math.sin (k - r)),
+         y: (w * 0.5) + (w * 0.4 * Math.cos (k - r))
+      }
+
+      const p2 = {
+         x: (w * 0.5) + (w * 0.2 * Math.sin (k - r)),
+         y: (w * 0.5) + (w * 0.2 * Math.cos (k - r))
+      }
+
+      ctx.fillStyle = `darkmagenta`
+      ctx.fillRect (0, 0, w, w)
+
+      ctx.strokeStyle = `white`
+      ctx.lineWidth = w * 0.1
+
+      ctx.beginPath ()
+      ctx.arc (w * 0.5, w * 0.5, w * 0.3, r, tau * 0.75 + r, false)
+      ctx.moveTo (p1.x, p1.y)
+      ctx.lineTo (p2.x, p2.y)
+      ctx.stroke ()
+
+      ctx.fillStyle = `white`
+      ctx.font = `bold ${ w * 0.2 }px sans-serif`
+
+      ctx.textAlign = `center`
+      ctx.fillText (v, w * 0.5, w * 0.57)
+
+      ctx.font = `bold ${ w * 0.15 }px sans-serif`
+      ctx.textAlign = `left`
+      ctx.fillText (c, w * 0.03, w * 0.15)
+   }
+
+   // define a handler for midi messages
+   const midi_handler = e => midi_knob (e.data[1], e.data[2])
+
+   // assign the handler to already connected devices
+   const midi = await navigator.requestMIDIAccess ()
+   midi.inputs.forEach (device => {
+      device.onmidimessage = midi_handler
+   })
+
+   // if a new device connects, assign the handler to it as well
+   midi.onstatechange = e => {
+      if (e.port instanceof MIDIInput && e.port.state === `connected`) {
+         e.port.onmidimessage = midi_handler
+      }
+   }
+
+   midi_knob (0, 0)
+</script>
+```
