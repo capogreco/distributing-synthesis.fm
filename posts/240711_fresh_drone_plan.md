@@ -1,5 +1,5 @@
 ---
-title: Fresh Drone 1 ~ Plan
+title: Fresh Drone 0 ~ Plan
 published_at: 2024-07-11
 snippet: ... inspired by the sonic practice of Anthony Artmann
 disable_html_sanitization: true
@@ -8,7 +8,7 @@ allow_math: true
 
 <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/149580066&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"><a href="https://soundcloud.com/anthony-artmann" title="Anthony Artmann" target="_blank" style="color: #cccccc; text-decoration: none;">Anthony Artmann</a> · <a href="https://soundcloud.com/anthony-artmann/super-minimal-jazz" title="Super Minimal Jazz" target="_blank" style="color: #cccccc; text-decoration: none;">Super Minimal Jazz</a></div>
 
-Local sonic artist, Anthony Artmann ([instagram](https://www.instagram.com/drone_sound_meditation/), [soundcloud](https://soundcloud.com/anthony-artmann)), facilitates regular participatory drone meditations at [Tempo Rubato](https://www.temporubato.com.au/) and elsewhere.  The [booking page](https://www.trybooking.com/events/landing/1229905) reads as follows:
+Local sonic artist, Anthony Artmann ([instagram](https://www.instagram.com/drone_sound_meditation/), [soundcloud](https://soundcloud.com/anthony-artmann)), hosts regular participatory drone meditations at [Tempo Rubato](https://www.temporubato.com.au/) and elsewhere.  The [booking page](https://www.trybooking.com/events/landing/1229905) reads as follows:
 
 > One note. Infinite Possibilities.
 > 
@@ -45,7 +45,7 @@ With this in mind, I devised a system of eight parameters categories, each with 
 - **Root**
    - $note \in \N \cap [ 0, 127 ], midinote$
    - $finetune \in \mathbb{Q} \cap [ -1, 1 ], semitones$
-   - $detune \in \mathbb{Q} \cap [ -1, 1 ], semitones$
+   - $detune \in \mathbb{Q} \cap [ 0, 1 ], semitones$
 - **Harmonic**
    - $numerator \in \N \cap [ 1, 12 ]$
    - $denominator \in \N \cap [ 1, 12 ]$
@@ -55,37 +55,57 @@ With this in mind, I devised a system of eight parameters categories, each with 
    - $speed \in \mathbb{Q} \cap [0.001, 16], Hz$
    - $diversity \in \mathbb{Q} \cap [0, 1]$
 - **Vibrato**
-   - Detune / Depth
-   - Speed
-   - Diversity
+   - $detune / depth \in \mathbb{Q} \cap [ -1, 1 ]$
+   - $speed \in \mathbb{Q} \cap [0.001, 16], Hz$
+   - $diversity \in \mathbb{Q} \cap [0, 1]$
 - **Timbre**
-   - Numerator
-   - Denominator
-   - Unity
+   - $numerator \in \N \cap [ 1, 12 ]$
+   - $denominator \in \N \cap [ 1, 12 ]$
+   - $unity \in \mathbb{Q} \cap [0, 1]$
 - **LFO**
-   - Depth
-   - Speed
-   - Diversity
+   - $depth / shape \in \mathbb{Q} \cap [ -1, 1 ]$
+   - $speed \in \mathbb{Q} \cap [0.001, 16], Hz$
+   - $diversity \in \mathbb{Q} \cap [0, 1]$
 - **Reverb**
-   - Length
-   - Amount
-   - Diversity
+   - $length \in \mathbb{Q} \cap [0, 1000], seconds$
+   - $amount \in \mathbb{Q} \cap [0, 1]$
+   - $diversity \in \mathbb{Q} \cap [0, 1]$
 - **Global**
-   - Volume
-   - Lag TIme
-   - Diversity
+   - $volume \in \mathbb{Q} \cap [0, 1]$
+   - $lag time \in \mathbb{Q} \cap [0, 1000], seconds$
+   - $diversity \in \mathbb{Q} \cap [0, 1]$
 
 ... plus an additional, ninth category:
 
 - **Trill**
-   - Interval
-   - Speed
-   - Diversity
+   - $interval \in \mathbb{Q} \cap [0, 1]$
+   - $speed \in \mathbb{Q} \cap [0.001, 16], Hz$
+   - $diversity \in \mathbb{Q} \cap [0, 1]$
 
 ... which I envisioned could be swapped with **Tremolo**, in and out of the third parameter category slot, to give two mutually exclusive modes: tremolo mode, and trill mode.
 
-## Attending to the Spectre
+## Polyphony
 
-... of massive polyphony, which hovers around and above each articulation of this project.
+In each of the parameter categories, the third parameter is designated to control a stochastic algorithm responsible for producing *difference* within that parameter category, across $n$ synthesis clients.
 
-In each of the parameter categories, the third parameter is designated to control a stochastic algorithm responsible for producing **difference* between the $n$ synthesis clients across that parameter category.
+- ***detune***, which offsets the root frequency of each synthesis client by a random amount within the specified range, the maximum being $\pm 1 semitone$
+- ***diversity***, which applies randomness to the parameter immediately above it in each case
+- ***unity***, which works to reduce the randomness of the two parameters immediately above it in each case
+
+## Roll Out
+
+<div align="center"><img src="/240711/mvp.png" /></div>
+
+*Image from Henrik Kniberg's blog post, [Making sense of MVP](https://blog.crisp.se/2016/01/25/henrikkniberg/making-sense-of-mvp)*.
+
+Taking my [Fresh mc-24 template](https://github.com/capogreco/fresh_mc-24_template) as a starting point, the plan is to build in the operational capacities for each of the parameter categories in five stages:
+
+| Stage I | Stage II | Stage III | Stage IV | Stage V |
+| :------ | :------- | :-------- | :------- | :------ |
+| Root    | Harmonic | Tremolo   | Timbre   | Trill   |
+| Global  | Reverb   | Vibrato   | LFO      |         |
+
+This will allow me to write a blog post about the mathematics and javascript patterns involved with the implementation of each parameter.
+
+
+
