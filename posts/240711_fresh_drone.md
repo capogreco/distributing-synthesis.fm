@@ -105,7 +105,6 @@ Taking my [Fresh mc-24 template](https://github.com/capogreco/fresh_mc-24_templa
 | Root    | Harmonic | Tremolo   | Timbre   | Trill   |
 | Global  | Reverb   | Vibrato   | LFO      |         |
 
-This will allow me to write a blog post about the mathematics and javascript patterns involved with the implementation of each parameter.
 
 
 

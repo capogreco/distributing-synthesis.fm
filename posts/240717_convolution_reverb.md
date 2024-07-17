@@ -112,6 +112,8 @@ allow_math: true
 </script>  
 
 ```html
+<div id="reverb_example"></div>
+
 <script type="module">
    const div = document.getElementById (`reverb_example`)
    div.width = div.parentNode.scrollWidth
