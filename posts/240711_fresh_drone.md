@@ -1,5 +1,5 @@
 ---
-title: Fresh Drone 0 ~ Plan
+title: Fresh Drone
 published_at: 2024-07-11
 snippet: ... inspired by the sonic practice of Anthony Artmann
 disable_html_sanitization: true
