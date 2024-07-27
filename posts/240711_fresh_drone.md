@@ -24,13 +24,11 @@ Local sonic artist, Anthony Artmann ([instagram](https://www.instagram.com/drone
 
 ## Motive
 
-Witnessing the slow tectonic shifts and subterranean flow - the gentle and terrifying mode of deep listening facilitated by Artmann et al. a few weeks ago, was a quiet revelation for me.  
+Witnessing the slow tectonic shifts and subterranean flow - a deep listening sensibility facilitated by Artmann et al. a few weeks ago, was a quiet and beautiful revelation for me.  
 
-Artmann's practice, clothed in parochial irreverance, opens a space in which the missing aesthetic register of the sacred can become indelibly reinstantiated.
+Artmann's practice opens a space in which the missing aesthetic register (the aesthetic register of the *sacred*), is strongly reinstantiated.
 
-I was inspired.  Which is another way of saying that I wanted to manufacture an excuse to be close enough to him to steal his secrets, so that I, like him, might also become a practitioner of the missing aesthetic register.
-
-My plan: I decided to build a distributed synthesis instrument that would allow me to contribute to the drone next time it happens.
+I was inspired and cobbled together a plan to build a distributed synthesis instrument to participate with at the next drone meditation.
 
 ## Control
 
@@ -106,5 +104,20 @@ Taking my [Fresh mc-24 template](https://github.com/capogreco/fresh_mc-24_templa
 | Global  | Reverb   | Vibrato   | LFO      |         |
 
 
+# ~ ~ ~ UPDATE ~ ~ ~
 
+## Prototype:
 
+You can find a live version of the synth client [here](drone.assembly.fm)
+
+... and a live version of the control client [here](drone.assembly.fm/ctrl)
+
+## Improvisation:
+
+<iframe id="privation_1" src="https://www.youtube.com/embed/5hZ7cJiFj-E?si=ZbQbK493f_Tfe9vm" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+<script>
+   const frame = document.getElementById (`privation_1`)
+   frame.width = frame.parentNode.scrollWidth
+   frame.height = frame.width * 2304 / 2048 
+</script>
