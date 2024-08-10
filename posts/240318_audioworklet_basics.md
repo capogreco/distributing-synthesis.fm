@@ -7,7 +7,7 @@ disable_html_sanitization: true
 
 For much of the 2010s, doing more sophisticated forms of synthesis than simple subtractive and rudimentary FM in the browser required using [Script Processor Node](https://developer.mozilla.org/en-US/docs/Web/API/ScriptProcessorNode), which was a lot of the time a bit glitchy and unreliable, and which deprecated with the introduction of [Audio Worklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet) in 2017.
 
-Now that **Audio Worklet** is [almost globally implemented](https://caniuse.com/mdn-api_audioworklet), it promises a purpose built interface with which creative coders *( ... and other types of coders too!)* can implement forms of sample to sample digital signal processing (DSP) inside a browser, including things like phase modulation and formant synthesis.
+Now that **Audio Worklet** enjoys widespread [browser implementation](https://caniuse.com/mdn-api_audioworklet), it promises a purpose built interface with which creative coders (as well as regular, normal coders) can implement forms of sample to sample digital signal processing (DSP) inside a browser, including things that Web Audio API can't do, like phase modulation and formant synthesis.
 
 There are a handful of resources about **Audio Worklet**, including:
 - the World Wide Web Consortium (W3C) [specification](https://webaudio.github.io/web-audio-api/#AudioWorklet)
@@ -347,7 +347,7 @@ function deparameterise (arr, ind) {
 
    async function init_audio () {
       await audio_context.resume ()
-      await audio_context.audioWorklet.addModule (`worklet/sine_worklet.js`)
+      await audio_context.audioWorklet.addModule (`worklets/sine_worklet.js`)
 
       graph.sine = new AudioWorkletNode (audio_context, `worklet_sine`, {
          processorOptions: {
