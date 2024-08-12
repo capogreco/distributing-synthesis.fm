@@ -24,6 +24,22 @@ allow_math: true
 
    a.ctx.suspend ()
 
+   const point_phase = e => {
+      const { target: { 
+         offsetLeft, offsetTop, offsetWidth, offsetHeight 
+      } } = e
+
+      const abs = {
+         x: e.clientX ? e.clientX : e.touches[0].clientX,
+         y: e.clientY ? e.clientY : e.touches[0].clientY
+      }
+
+      const x = (abs.x - offsetLeft) / offsetWidth
+      const y = (abs.y - offsetTop)  / offsetHeight
+
+      return { x, y }
+   }
+
    const init_audio = async () => {
       a.ctx.resume ()
 
@@ -59,11 +75,26 @@ allow_math: true
 
       a.sample.connect (a.ctx.destination)
 
+      a.start = await a.sample.parameters.get (`start`)
+      a.end   = await a.sample.parameters.get (`end`)
+      a.freq  = await a.sample.parameters.get (`freq`)
+
       draw_frame ()
    }
 
    cnv.onpointerdown = e => {
       if (a.ctx.state != `running`) init_audio ()
+      else {
+         const t = a.ctx.currentTime
+
+         a.start.cancelScheduledValues (t)
+         a.start.setValueAtTime (a.start.value, t)
+         a.start.linearRampToValueAtTime (point_phase (e).x, t + 3)
+
+         a.end.cancelScheduledValues (t)
+         a.end.setValueAtTime (a.start.value, t)
+         a.end.linearRampToValueAtTime (point_phase (e).x, t + 3)
+      }
    }
 
 const draw_frame = milli_s => {
