@@ -75,9 +75,9 @@ allow_math: true
 
       a.sample.connect (a.ctx.destination)
 
-      a.start = await a.sample.parameters.get (`start`)
-      a.end   = await a.sample.parameters.get (`end`)
       a.freq  = await a.sample.parameters.get (`freq`)
+      a.fulcrum = await a.sample.parameters.get (`fulcrum`)
+      a.open = await a.sample.parameters.get (`open`)
 
       draw_frame ()
    }
@@ -85,15 +85,18 @@ allow_math: true
    cnv.onpointerdown = e => {
       if (a.ctx.state != `running`) init_audio ()
       else {
+         console.log (a.fulcrum.value, a.open.value)
+
          const t = a.ctx.currentTime
 
-         a.start.cancelScheduledValues (t)
-         a.start.setValueAtTime (a.start.value, t)
-         a.start.linearRampToValueAtTime (point_phase (e).x, t + 3)
+         a.fulcrum.cancelScheduledValues (t)
+         a.fulcrum.setValueAtTime (a.fulcrum.value, t)
+         a.fulcrum.linearRampToValueAtTime (point_phase (e).x, t + 2)
 
-         a.end.cancelScheduledValues (t)
-         a.end.setValueAtTime (a.start.value, t)
-         a.end.linearRampToValueAtTime (point_phase (e).x, t + 3)
+         a.open.cancelScheduledValues (t)
+         a.open.setValueAtTime (0, t)
+         a.open.linearRampToValueAtTime (1, t + 5)
+         a.open.linearRampToValueAtTime (0, t + 10)
       }
    }
 
