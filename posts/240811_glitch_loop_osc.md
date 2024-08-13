@@ -1,6 +1,6 @@
 ---
 title: Glitch Loop Oscillator
-published_at: 2024-08-10
+published_at: 2024-08-11
 snippet: ... with Web Audio API.
 disable_html_sanitization: true
 allow_math: true
