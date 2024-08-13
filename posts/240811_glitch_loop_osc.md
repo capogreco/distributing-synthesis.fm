@@ -1,7 +1,7 @@
 ---
 title: Glitch Loop Oscillator
 published_at: 2024-08-11
-snippet: ... with Web Audio API.
+snippet: ... with Audio Worklet.
 disable_html_sanitization: true
 allow_math: true
 ---
