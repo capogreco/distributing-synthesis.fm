@@ -8,6 +8,8 @@ allow_math: true
 
 <canvas id="glitch_loop_oscillator"></canvas>
 
+Audio from [here](https://youtu.be/VeiM3sm6blY?si=VgLal3JLali_A_0I&t=3651).
+
 <script>
    const cnv = document.getElementById (`glitch_loop_oscillator`)
    cnv.width = cnv.parentNode.scrollWidth
