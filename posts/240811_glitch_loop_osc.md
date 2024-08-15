@@ -40,6 +40,20 @@ allow_math: true
       return { x, y }
    }
 
+   const midi_to_freq = n => 440 * Math.pow (2, (n - 69) / 12)
+
+   const notes = {
+      root: 76,
+      chord: [ 0, 4, 7, 11 ],
+      i: 3,
+   }
+
+   notes.next = () => {
+      notes.i++
+      notes.i %= notes.chord.length
+      return midi_to_freq (notes.root + notes.chord[notes.i])
+   }
+
    const init_audio = async () => {
       a.ctx.resume ()
 
@@ -85,18 +99,19 @@ allow_math: true
    cnv.onpointerdown = e => {
       if (a.ctx.state != `running`) init_audio ()
       else {
-         console.log (a.fulcrum.value, a.open.value)
-
          const t = a.ctx.currentTime
 
+         a.freq.setValueAtTime (notes.next (), t)
+
          a.fulcrum.cancelScheduledValues (t)
-         a.fulcrum.setValueAtTime (a.fulcrum.value, t)
+         a.fulcrum.setValueAtTime (a.phase, t)
          a.fulcrum.linearRampToValueAtTime (point_phase (e).x, t + 2)
 
          a.open.cancelScheduledValues (t)
          a.open.setValueAtTime (0, t)
          a.open.linearRampToValueAtTime (1, t + 5)
          a.open.linearRampToValueAtTime (0, t + 10)
+         a.open.linearRampToValueAtTime (1, t + 20)
       }
    }
 
@@ -124,9 +139,6 @@ const draw_frame = milli_s => {
 
    ctx.strokeStyle = `red`
    ctx.stroke ()
-
-   // ctx.stroke
-
 }
 
    
