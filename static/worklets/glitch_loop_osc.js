@@ -1,9 +1,6 @@
-
-
 const deparameterise = (a, i) => a[(a.length != 1) * i]
 
-class SampleProcessor extends AudioWorkletProcessor {
-
+class GLOProcessor extends AudioWorkletProcessor {
    constructor ({ processorOptions: { audio_data } }) {
       super ()
       this.alive = true
@@ -23,8 +20,6 @@ class SampleProcessor extends AudioWorkletProcessor {
          { name: `freq`, defaultValue: 1320 },
          { name: `fulcrum`, defaultValue: 0 },
          { name: `open`, defaultValue: 1 },
-         // { name: `start`, defaultValue: 0 },
-         // { name: `end`, defaultValue: 1 },
       ]
    }
 
@@ -35,9 +30,7 @@ class SampleProcessor extends AudioWorkletProcessor {
          const rate    = deparameterise (parameters.rate, frame)
          const freq    = deparameterise (parameters.freq, frame)
          const fulcrum = deparameterise (parameters.fulcrum, frame)
-         const open   = deparameterise (parameters.open, frame) ** 12
-         // const start = deparameterise (parameters.start, frame)
-         // const end = deparameterise (parameters.end, frame)
+         const open    = deparameterise (parameters.open, frame) ** 12
 
          const period = sampleRate / freq // in frames
          const total_periods = this.audio_data.length / period
@@ -46,9 +39,6 @@ class SampleProcessor extends AudioWorkletProcessor {
          const fulc_frame = this.audio_data.length * fulcrum
          const start = fulc_frame - (current_frames * fulcrum)
          const end = fulc_frame + (current_frames * (1 - fulcrum))
-
-         // const diff = Math.abs (end - start) * this.audio_data.length
-         // const quant_diff = (Math.floor (diff / period) + 1) * period
 
          if (this.play_head < start) {
             this.play_head = Math.floor (start)
@@ -66,8 +56,4 @@ class SampleProcessor extends AudioWorkletProcessor {
    }
 }
 
-registerProcessor (`sampler`, SampleProcessor)
-
-// function deparameterise (a, i) {
-//    return a[(a.length != 1) * i]
-// }
+registerProcessor (`glitch_loop_osc`, GLOProcessor)
