@@ -1,34 +1,56 @@
+const bi_rand = () => Math.random () * 2 - 1
+
+class CosineNoiseOperator {
+   constructor (period, amp) {
+      this.amp = amp
+      this.period = period
+      this.frame = 0
+      this.start = bi_rand ()
+      this.end = bi_rand ()
+      this.mid = (this.start + this.end) / 2
+      this.range = this.start - this.end
+   }
+
+   get () {
+      if (this.frame === this.period) {
+         this.frame = 0
+         this.start = this.end
+         this.end = bi_rand ()
+         this.mid = (this.start + this.end) / 2
+         this.range = this.start - this.end
+      }
+
+      const phase = this.frame / this.period
+      const sig = Math.cos (phase * Math.PI) * this.range + this.mid
+
+      this.frame++
+
+      return sig * this.amp
+   }
+
+}
+
 class PinkNoiseProcessor extends AudioWorkletProcessor {
 
    constructor () {
       super ()
       this.alive = true
-      this.values = Array (10).fill (0)
-      this.i = 0
+      this.operators = Array (10).fill (0).map ((_, i) => {
+         return new CosineNoiseOperator (2 ** i, 1 / (10 - i))
+      })
+      console.log (this.operators)
    }
 
    process (_inputs, outputs) {
       const out = outputs[0][0]
 
       for (let frame = 0; frame < out.length; frame++) {
-         let p = 0.5
-         let m = 0.001953125
          let sig = 0
-
-         this.values.forEach ((_, i, a) => {
-            if (Math.random () < p) {
-               a[i] = Math.random () * 2 - 1
-            }
-
-            sig += a[i] * m
-
-            p *= 0.5
-            m *= 2
+         this.operators.forEach (op => {
+            sig += op.get ()
          })
-
-         out[frame] = sig - 0.9990234375
+         out[frame] = sig * 0.5
       }
-
 
       return this.alive
    }
