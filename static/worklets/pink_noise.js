@@ -2,21 +2,21 @@ const bi_rand = () => Math.random () * 2 - 1
 
 class CosineNoiseOperator {
    constructor (period, amp) {
-      this.amp = amp
       this.period = period
-      this.frame = 0
-      this.start = bi_rand ()
-      this.end = bi_rand ()
-      this.mid = (this.start + this.end) / 2
-      this.range = this.start - this.end
+      this.amp    = amp
+      this.frame  = 0
+      this.start  = bi_rand ()
+      this.end    = bi_rand ()
+      this.mid    = (this.start + this.end) / 2
+      this.range  = this.start - this.end
    }
 
    get () {
       if (this.frame === this.period) {
          this.frame = 0
          this.start = this.end
-         this.end = bi_rand ()
-         this.mid = (this.start + this.end) / 2
+         this.end   = bi_rand ()
+         this.mid   = (this.start + this.end) / 2
          this.range = this.start - this.end
       }
 
@@ -27,7 +27,6 @@ class CosineNoiseOperator {
 
       return sig * this.amp
    }
-
 }
 
 class PinkNoiseProcessor extends AudioWorkletProcessor {
@@ -38,7 +37,6 @@ class PinkNoiseProcessor extends AudioWorkletProcessor {
       this.operators = Array (10).fill (0).map ((_, i) => {
          return new CosineNoiseOperator (2 ** i, 1 / (10 - i))
       })
-      console.log (this.operators)
    }
 
    process (_inputs, outputs) {
@@ -46,9 +44,11 @@ class PinkNoiseProcessor extends AudioWorkletProcessor {
 
       for (let frame = 0; frame < out.length; frame++) {
          let sig = 0
+         
          this.operators.forEach (op => {
             sig += op.get ()
          })
+
          out[frame] = sig * 0.5
       }
 

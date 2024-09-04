@@ -45,15 +45,17 @@ Audio from [here](https://youtu.be/VeiM3sm6blY?si=VgLal3JLali_A_0I&t=3651).
    const midi_to_freq = n => 440 * Math.pow (2, (n - 69) / 12)
 
    const notes = {
-      root: 76,
-      chord: [ 0, 4, 7, 11 ],
-      i: 3,
+      root: 78,
+      chord: [ -4, -2, 2, 4, 6, 7, 9, 11 ],
+      fine_tune: 1 / 3,
+      i: 0,
    }
 
    notes.next = () => {
+      const f = midi_to_freq (notes.root + notes.chord[notes.i] + notes.fine_tune)
       notes.i++
       notes.i %= notes.chord.length
-      return midi_to_freq (notes.root + notes.chord[notes.i])
+      return f
    }
 
    const init_audio = async () => {
@@ -238,8 +240,8 @@ registerProcessor (`glitch_loop_osc`, GLOProcessor)
    const midi_to_freq = n => 440 * Math.pow (2, (n - 69) / 12)
 
    const notes = {
-      root: 76,
-      chord: [ 0, 4, 7, 11 ],
+      root: 78,
+      chord: [ -2, 2, 3, 6, 7 ],
       i: 3,
    }
 

@@ -40,16 +40,14 @@ class GLOProcessor extends AudioWorkletProcessor {
          const start = fulc_frame - (current_frames * fulcrum)
          const end = fulc_frame + (current_frames * (1 - fulcrum))
 
-         if (this.play_head < start) {
+         this.play_head += rate
+
+         if (this.play_head < start || this.play_head >= end) {
             this.play_head = Math.floor (start)
          }
 
-         this.play_head += rate
          out[frame] = this.audio_data[Math.floor(this.play_head)]
 
-         if (this.play_head >= end) {
-            this.play_head = Math.floor (start)
-         }
        }
 
       return this.alive
