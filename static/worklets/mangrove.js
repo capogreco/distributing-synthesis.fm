@@ -22,26 +22,24 @@ class MangroveProcessor extends AudioWorkletProcessor {
          let sig = 0
          const freq     = deparameterise (parameters.freq, frame)
          let duty_cycle = deparameterise (parameters.duty_cycle, frame)
-         duty_cycle = Math.max (0, Math.min (1, duty_cycle))
 
-         let reset_phase = false
-         const apex = (Math.pow (4, duty_cycle * 2) - 1) / 2
-         if (this.phase < apex) {
-            sig = this.phase / apex
-         }
-         else {
-            sig = 1 - ((this.phase - apex) / apex)
-         }
+         duty_cycle = Math.max (0, Math.min (1, duty_cycle))
+         const apex = (Math.pow (4, duty_cycle * 2) - 1) / 4
+
+         sig = this.phase < apex
+            ? this.phase / apex
+            : 1 - ((this.phase - apex) / apex)
 
          sig *= 2
          sig -= 1
 
-         if (sig < -1) {
+         let reset_phase = false
+         if (sig <= -1) {
             sig = -1
             reset_phase = true
          }
 
-         this.phase += this.inc * freq
+         this.phase      += this.inc * freq
          this.real_phase += this.inc * freq
 
          if (this.real_phase >= 1) {
@@ -51,7 +49,6 @@ class MangroveProcessor extends AudioWorkletProcessor {
             }
          }
 
-         // this.phase %= 1
          out[frame] = sig
       }
 
