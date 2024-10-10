@@ -10,7 +10,7 @@ class MangroveProcessor extends AudioWorkletProcessor {
 
    static get parameterDescriptors () {
       return [ 
-         { name: 'freq', defaultValue: 428 * Math.pow (2, 1 / 12)  },
+         { name: 'freq', defaultValue: 0  },
          { name: 'duty_cycle',  defaultValue: 0.5 },
       ]
    }
@@ -47,6 +47,10 @@ class MangroveProcessor extends AudioWorkletProcessor {
             if (reset_phase) {
                this.phase = 0
             }
+         }
+
+         if (freq < 1) {
+            sig *= freq
          }
 
          out[frame] = sig

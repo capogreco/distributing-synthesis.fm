@@ -6,7 +6,7 @@ disable_html_sanitization: true
 allow_math: true
 ---
 
-Inspired by one of my favourite oscillators, the [Mannequins Mangrove](https://www.whimsicalraps.com/products/mangrove).
+Inspired by the [Mannequins Mangrove](https://www.whimsicalraps.com/products/mangrove).
 
 
 <canvas id="mangrove_example"></canvas>
@@ -285,17 +285,25 @@ const deparameterise = (arr, ind) => {
 
    const init_audio = async () => {
       await a.ctx.resume ()
+
       await a.ctx.audioWorklet.addModule (`worklets/mangrove.js`)
       
       a.mangrove = new AudioWorkletNode (a.ctx, `mangrove`)
-      a.mangrove.connect (a.ctx.destination)
+      // a.mangrove.connect (a.ctx.destination)
 
       a.freq       = await a.mangrove.parameters.get (`freq`)
       a.duty_cycle = await a.mangrove.parameters.get (`duty_cycle`)
 
+      // a.hpf = new BiquadFilterNode (a.ctx, { type: `highpass` })
+      // a.hpf.type = `highpass`
+      // a.hpf.frequency.value = 16
+
       a.analyser         = a.ctx.createAnalyser ()
       a.analyser.fftSize = 2048
-      a.mangrove.connect (a.analyser)
+      a.mangrove
+         // .connect (a.hpf)
+         .connect (a.analyser)
+         .connect (a.ctx.destination)
 
       a.data_array = new Uint8Array (a.analyser.frequencyBinCount)
 
@@ -317,8 +325,8 @@ const deparameterise = (arr, ind) => {
    }
 
    const prepare_param = (p, now) => {
-      p.cancelScheduledValues (now)
       p.setValueAtTime (p.value, now)
+      p.cancelScheduledValues (now)
    }
 
    const prepare_params = (a, now) => {
@@ -336,7 +344,7 @@ const deparameterise = (arr, ind) => {
    const splice_array = (a, start, length) => {
 
       if (a.length < start + length) {
-         console.log (`array is too short`)
+         // console.log (`array is too short`)
          return [0]
          // return Array (length).fill (0)
       }
@@ -389,13 +397,19 @@ const deparameterise = (arr, ind) => {
 
       cnv.style.backgroundColor = `white`
 
+      const point = point_phase (e)
+
       const now = a.ctx.currentTime
       prepare_params ([ a.freq, a.duty_cycle ], now)
       
-      const f = 220 * (2 ** point_phase (e).x)
+      const f = 220 * (2 ** point.x)
+      console.log (`freq is: ${ a.freq.value }`)
+      if (a.freq.value === 0) {
+         a.freq.linearRampToValueAtTime (16, now + 0.1)
+      }
       a.freq.exponentialRampToValueAtTime (f, now + 0.3)
       
-      a.duty_cycle.linearRampToValueAtTime (0.2, now + 0.1)
+      a.duty_cycle.linearRampToValueAtTime (point.y, now + 0.1)
 
       pointer_down = true
       is_animating = true
@@ -407,12 +421,14 @@ const deparameterise = (arr, ind) => {
 
       if (!pointer_down || cool_down) return
 
+      const point = point_phase (e)
+
       const now = a.ctx.currentTime
-      const f = 220 * (2 ** point_phase (e).x)
+      const f = 220 * (2 ** point.x)
 
       prepare_params ([ a.freq, a.duty_cycle ], now)
       a.freq.exponentialRampToValueAtTime (f, now + 0.1)
-      a.duty_cycle.linearRampToValueAtTime (point_phase (e).y, now + 0.1)
+      a.duty_cycle.linearRampToValueAtTime (point.y, now + 0.1)
 
       cool_down = true
       setTimeout (() => {
@@ -431,7 +447,7 @@ const deparameterise = (arr, ind) => {
       const now = a.ctx.currentTime
       prepare_params ([ a.freq, a.duty_cycle ], now)
       a.freq.exponentialRampToValueAtTime (16, now + 0.3)
-      a.freq.linearRampToValueAtTime (0, now + 0.6)
+      a.freq.linearRampToValueAtTime (0, now + 0.4)
       a.duty_cycle.linearRampToValueAtTime (0, now + 0.3)
 
       cnv.style.backgroundColor = `black`

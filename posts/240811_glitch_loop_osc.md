@@ -8,7 +8,8 @@ allow_math: true
 
 <canvas id="glitch_loop_oscillator"></canvas>
 
-Audio from [here](https://youtu.be/VeiM3sm6blY?si=VgLal3JLali_A_0I&t=3651).
+<!-- Audio from [here](https://youtu.be/VeiM3sm6blY?si=VgLal3JLali_A_0I&t=3651). -->
+Audio from [here](https://youtu.be/49Tuck7eMqo).
 
 <script>
    const cnv = document.getElementById (`glitch_loop_oscillator`)
@@ -61,7 +62,8 @@ Audio from [here](https://youtu.be/VeiM3sm6blY?si=VgLal3JLali_A_0I&t=3651).
    const init_audio = async () => {
       a.ctx.resume ()
 
-      const asset = await fetch (`/240811/relation_defamiliarised_mono.mp3`)
+      // const asset = await fetch (`/240811/relation_defamiliarised_mono.mp3`)
+      const asset = await fetch (`/240811/we_might_not_like_it.mp3`)
       const array_buffer = await asset.arrayBuffer ()
       const audio_buffer = await a.ctx.decodeAudioData (array_buffer)
       const audio_data = audio_buffer.getChannelData(0)
