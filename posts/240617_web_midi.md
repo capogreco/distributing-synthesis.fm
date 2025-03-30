@@ -7,7 +7,7 @@ disable_html_sanitization: true
 
 This post will detail how to implement MIDI control in the browser via [Web MIDI API](https://developer.mozilla.org/en-US/docs/Web/API/Web_MIDI_API).
 
-**CAUTION:** The API we will be using does not enjoy universal implementation, and already I have had trouble making this work in Firefox.  **Check browser compatibility → [here](https://developer.mozilla.org/en-US/docs/Web/API/Web_MIDI_API#browser_compatibility)**
+**CAUTION:** The API we will be using is not universally implementated, and already I have had trouble making this work in Firefox.  **Check browser compatibility → [here](https://developer.mozilla.org/en-US/docs/Web/API/Web_MIDI_API#browser_compatibility)**
 
 <image src="/240617/mc-24.jpeg" style="width:100%">
 
@@ -15,13 +15,13 @@ This post will detail how to implement MIDI control in the browser via [Web MIDI
 - *[Brave](https://brave.com/), running in macOS Sonoma 14.5*
 - *[nakedboards MC-24](https://nakedboards.org/mc-24) (pictured above)*
 
-*... although theoretically any USB MIDI device supported by your operating system should work.*
+*Theoretically, any USB MIDI device supported by your operating system should work.*
 
 ## The Navigator Object
 
 The [navigator object](https://developer.mozilla.org/en-US/docs/Web/API/Navigator) represents an [interface](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Introduction) with which javascript can access various information and behaviours provided by the web browser.  It is through this object that we can use javascript to ask the browser for access to various aspects of the device's hardware, such as USB MIDI devices that might be connected, for example.
 
-Technically, `navigator` is a property of the `window` object (so, `window.navigator`) but we can also just access it via the variable name `navigator`, which is given to us for free when our javascript is run in a browser.
+Technically, `navigator` is a property of the `window` object (so, `window.navigator`) but we can also just access it via the variable name `navigator`, which we get for free when our javascript is run in a browser.
 
 ## MIDI Permissions
 
