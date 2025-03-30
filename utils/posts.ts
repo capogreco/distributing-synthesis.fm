@@ -18,6 +18,7 @@ export async function getPosts(): Promise<Post[]> {
   const files = Deno.readDir(DIRECTORY);
   const promises = [];
   for await (const file of files) {
+    if (file.name.startsWith(".")) continue;
     const slug = file.name.replace(".md", "");
     promises.push(getPost(slug));
   }
@@ -28,9 +29,19 @@ export async function getPosts(): Promise<Post[]> {
 
 // Get post.
 export async function getPost(slug: string): Promise<Post | null> {
-  // console.dir (slug)
-  const text = await Deno.readTextFile(join(DIRECTORY, `${ slug }.md`));
-  const { attrs, body } = extract(text);
+  const filePath = join(DIRECTORY, `${slug}.md`);
+  const text = await Deno.readTextFile(filePath);
+  const { attrs, body } = extract(text) as {
+    attrs: {
+      title: string;
+      published_at: string;
+      snippet: string;
+      disable_html_sanitization: boolean;
+      allow_math: boolean;
+    };
+    body: string;
+  };
+
   return {
     slug,
     title: attrs.title,

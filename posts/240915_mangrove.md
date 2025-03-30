@@ -8,7 +8,6 @@ allow_math: true
 
 Inspired by the [Mannequins Mangrove](https://www.whimsicalraps.com/products/mangrove).
 
-
 <canvas id="mangrove_example"></canvas>
 
 <iframe id="demo" src="https://www.youtube.com/embed/k4PVOwMX0Cg?si=lrT8luOpel7m2mIU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>

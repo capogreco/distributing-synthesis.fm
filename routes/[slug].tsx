@@ -23,7 +23,7 @@ export default function PostPage(props: PageProps<Post>) {
         <style dangerouslySetInnerHTML={{ __html: KATEX_CSS }} />
       </Head>
       <main class="max-w-screen-md px-4 pt-16 mx-auto">
-        <h1 class="text-5xl font-bold"> { post.title } </h1>
+        <h1 class="text-5xl font-bold">{post.title}</h1>
         <time class="text-gray-500">
           {new Date(post.publishedAt).toLocaleDateString("en-us", {
             year: "numeric",
@@ -31,9 +31,10 @@ export default function PostPage(props: PageProps<Post>) {
             day: "numeric",
           })}
         </time>
+        <a href="/" class="block mt-4 text-blue-500">← Back to home</a>
         <div
           class="mt-8 markdown-body"
-          dangerouslySetInnerHTML={{ __html: render (post.content, {
+          dangerouslySetInnerHTML={{ __html: render(post.content, {
             disableHtmlSanitization: post.disableHtmlSanitization,
             allowMath: post.allowMath,
           }) }}
